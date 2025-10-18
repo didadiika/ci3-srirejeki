@@ -15,4 +15,17 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 application/logs/*
 !application/logs/index.html
 !application/logs/.htaccess
-/vendor/
+#/vendor/
+#/system/
+
+# General ignores
+.DS_Store
+.env
+.vscode/
+nbproject/
+Thumbs.db
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+/uploads/
