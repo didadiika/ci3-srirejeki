@@ -1,0 +1,251 @@
+@charset "utf-8";
+/* CSS Document */
+
+
+@font-face {
+    font-family: 'IstokWebRegular';
+    src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+    font-style: bold;
+
+}
+
+
+@font-face {
+    font-family: 'TendernessRegular';
+    src: url('font/Tenderness-webfont.eot');
+    src: url('font/Tenderness-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/Tenderness-webfont.woff') format('woff'),
+         url('font/Tenderness-webfont.ttf') format('truetype'),
+         url('font/Tenderness-webfont.svg#TendernessRegular') format('svg');
+    font-weight: 500;
+    font-style: normal;
+
+}
+
+@page { size: 210mm 297mm; }
+
+/* LAYOUT LAPORAN */
+
+.body {
+	width: 210mm;
+	margin:2cm auto;
+}
+
+
+.kop1{
+	text-align: center;
+}
+
+.tabel-keterangan
+{
+	border-collapse:collapse;
+	margin-top:10px;
+	width:40%;
+}
+
+.tabel-keterangan td 
+{
+	border-collapse:collapse;
+	border:1px solid;
+	font-family: 'IstokWebRegular';
+	font-size:12px;
+}
+
+.tabel-gaji
+{
+	border-collapse:collapse;
+	margin-top:10px;
+	width:100%;
+}
+
+.tabel-gaji thead {
+	background:#CCCCCC;
+}
+
+
+.tabel-gaji td 
+{
+	border-collapse:collapse;
+	border:none;
+	 font-family: 'IstokWebRegular';
+	 font-size:12px;
+}
+
+.tabel 
+{
+	border-collapse:collapse;
+	margin-top:10px;
+	width:100%;
+}
+
+.tabel thead {
+	background:#CCCCCC;
+}
+
+
+.tabel td 
+{
+	border-collapse:collapse;
+	border:1px solid;
+	 font-family: 'IstokWebRegular';
+	 font-size:12px;
+}
+
+.tabeljudul 
+{
+	border-collapse:collapse;
+	margin-top:12px;
+	width:100%;
+}
+.tabeljudul td
+{
+	border-collapse:collapse;
+	border:1px solid;
+	border-top: 0px;
+	border-right: 0px;
+	border-left: 0px;
+	border-bottom: 0px;
+	padding:4px;
+	 font-family: 'IstokWebRegular';
+	 font-size:12px;
+}
+.kop2 {
+	padding-top: 4px;
+	text-align: center;
+	font-family: 'IstokWebRegular';
+	 font-size:17px;
+     src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+.kop2alamat {
+	text-align: center;
+	font-family: 'IstokWebRegular';
+	 font-size:12px;
+     font-weight: bold;
+     src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+.po-judul {
+	text-align: center;
+    font-family: 'TendernessRegular';
+	font-size:12px;
+    font-weight: bold;
+    text-decoration: underline;
+    src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+
+.po-nomor {
+	text-align: center;
+    font-family: 'TendernessRegular';
+	font-size:12px;
+    src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+
+.kepada {
+	text-align: left;
+	font-family: 'TendernessRegular';
+    line-height: 20px;
+	font-size:13px;
+    src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+
+.paragraf {
+	text-align: justify;
+    line-height: 20px;
+	font-family: 'TendernessRegular';
+	font-size:13px;
+    src: url('font/IstokWeb-Regular-webfont.eot');
+    src: url('font/IstokWeb-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('font/IstokWeb-Regular-webfont.woff') format('woff'),
+         url('font/IstokWeb-Regular-webfont.ttf') format('truetype'),
+         url('font/IstokWeb-Regular-webfont.svg#IstokWebRegular') format('svg');
+}
+
+.tabel-note
+{
+	border-collapse:collapse;
+	margin-top:10px;
+	width:50%;
+}
+
+.tabelfaktur 
+{
+	border-collapse:collapse;
+	margin-top:10px;
+	width:100%;
+}
+.tabelfaktur thead {
+	background:#FFFFFF;
+}
+.tabelfaktur td
+{
+	border-collapse:collapse;
+	border:1px solid;
+	border-top: 0px;
+	border-right: 0px;
+	border-left: 0px;
+	padding:4px;
+	 font-family: 'IstokWebRegular';
+	 font-size:10px;
+}
+
+
+
+
+.center  {
+	text-align : center ;
+}
+
+
+
+@media print {
+input.noPrint { display: none; }
+@page {
+        margin-left: 2cm;
+        margin-right: 2cm;
+        margin-top: 0;
+        margin-bottom: 0;
+}
+@page :footer {color: #fff; }
+@page :header {color: #fff; }
+
+}
+
+.head {
+	border-bottom:3px double #0a0a0a;
+}
+
+
+
+.foto {
+	width:200px;
+	float:left;
+	border:4px solid #343C42;
+	margin-right: 10px;
+}
+
+
+
+
