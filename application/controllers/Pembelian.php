@@ -203,12 +203,17 @@ class Pembelian extends BaseController{
         $id_pengirim = $this->input->post("id_pengirim");
         $tanggal = tgl_pecah($this->input->post("tanggal"));
         $no_polisi = $this->input->post("no_polisi");  
+        $jenis_timbangan = $this->input->post("jenis_timbangan");  
+        $jenis_timbangan = ($jenis_timbangan == "Ya") ? 1 : 0;
         $harga_kbk = 0;
+        $harga_timbangan = 0;
         $kbk = $this->db->query("select * from sistem_setting ");
         if($kbk->num_rows() > 0){
             foreach($kbk->result() as $r){
                 $harga_kbk = $r->kuli_bongkar_price;
-                $harga_timbangan = $r->timbangan_price;
+                if($jenis_timbangan == 0){
+                    $harga_timbangan = $r->timbangan_price;
+                }
             }
         }
 
@@ -381,7 +386,7 @@ class Pembelian extends BaseController{
             #-------------------------------------------------------------------#
             #Insert pengeluaran KULI ke tabel transaksi
             $id_transaksi = id_primary();
-            $keterangan = "Pembayaran Kuli (".$no_polisi.")";
+            $keterangan = "Kuli (".$no_polisi.")";
             $data = array("id_transaksi"=>$id_transaksi,
                         "nota"=>NULL,
                         "tanggal"=>$tanggal,
@@ -400,8 +405,10 @@ class Pembelian extends BaseController{
 
             #-------------------------------------------------------------------#
             #Insert pengeluaran TIMBANGAN ke tabel transaksi
+            if($timbangan > 0){
+
             $id_transaksi = id_primary();
-            $keterangan = "Pembayaran Timbangan (".$no_polisi.")";
+            $keterangan = "Timbangan (".$no_polisi.")";
             $data = array("id_transaksi"=>$id_transaksi,
                         "nota"=>NULL,
                         "tanggal"=>$tanggal,
@@ -418,6 +425,7 @@ class Pembelian extends BaseController{
                     );
             $this->pembelian_model->simpan_data("transaksi_pembelian",$data);
 
+            }
             #-------------------------------------------------------------------#
             #Insert ke tabel utang_mutasi
             

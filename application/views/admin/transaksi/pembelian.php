@@ -332,6 +332,12 @@ $('#tabel').on('click','.item_selesai',function(){
           <span class="help-block" id="pesanNama"></span>
       </div>
 
+      <div id="tagNama" class="form-group">
+          <label class="control-label" for="inputError"><i id="iconNama"></i> Timbangan Mesin</label>
+          <input type="checkbox" data-toggle="toggle" name="jenis_timbangan" checked value="Ya" data-on="Ya" data-off="Tidak">
+          <span class="help-block" id="pesanNama"></span>
+      </div>
+
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> Batal</button>

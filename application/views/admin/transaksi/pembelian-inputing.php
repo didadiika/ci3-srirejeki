@@ -273,7 +273,7 @@ $("#kbk").val(uang(parseInt(awal) * parseInt(kbk)));
             <?php
             if($pembelian->num_rows() > 0){
             foreach($pembelian->result() as $r){
-              $tim = ($r->timbangan == 0) ? 50000 : $r->timbangan; 
+              $tim = $r->timbangan; 
             ?>
             <form role="form" action="<?php echo base_url('pembelian/simpan'); ?>" method="post" autocomplete="off" enctype="multipart/form-data" id="form-pembelian">
             <input type="hidden" name="id" value="<?php echo $r->id_pembelian;?>">
