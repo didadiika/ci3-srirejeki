@@ -204,24 +204,24 @@ class Pembelian extends BaseController{
         $tanggal = tgl_pecah($this->input->post("tanggal"));
         $no_polisi = $this->input->post("no_polisi");  
         $jenis_timbangan = $this->input->post("jenis_timbangan");  
-        $jenis_timbangan = ($jenis_timbangan == "Ya") ? 1 : 0;
+        $jenis_timbangan = ($jenis_timbangan == "Ya") ? 'Mesin' : 'Manual';
         $harga_kbk = 0;
         $harga_timbangan = 0;
         $kbk = $this->db->query("select * from sistem_setting ");
         if($kbk->num_rows() > 0){
             foreach($kbk->result() as $r){
                 $harga_kbk = $r->kuli_bongkar_price;
-                if($jenis_timbangan == 0){
+                if($jenis_timbangan == 'Manual'){
                     $harga_timbangan = $r->timbangan_price;
                 }
             }
         }
-
+        
         
         
         $id = id_primary();
         $data = array("id_pembelian"=>$id,"id_pengirim"=>$id_pengirim,"tanggal"=>$tanggal,
-        "no_polisi"=>$no_polisi,"harga_kbk"=>$harga_kbk,"timbangan"=>$harga_timbangan,"status"=>"Proses");
+        "no_polisi"=>$no_polisi,"harga_kbk"=>$harga_kbk,"jenis_timbangan"=>$jenis_timbangan,"timbangan"=>$harga_timbangan,"status"=>"Proses");
         $this->load->model("pembelian_model");
         $this->pembelian_model->simpan_data("pembelian",$data);
         
