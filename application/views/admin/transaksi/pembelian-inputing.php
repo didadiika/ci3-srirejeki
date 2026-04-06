@@ -293,6 +293,10 @@ $("#kbk").val(uang(parseInt(awal) * parseInt(kbk)));
                 <th>Status :</th>
                 <td><span class="badge <?php if($r->status == "Selesai") {echo 'btn-primary' ;} else {echo 'btn-warning' ;} ?>"><?php echo $r->status;?></span></td>
               </tr>
+              <tr>
+                <th style="width:40%">Kategori :</th>
+                <td><strong><?php echo $r->nama_kategori;?></strong></td>
+              </tr>
             </table>
 
         <div id="tagNama" class="form-group">

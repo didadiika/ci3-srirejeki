@@ -27,6 +27,7 @@ class Laporan extends BaseController{
     function laporan_pembelian(){
        
         $level = $this->session->level;
+        $data['kategori'] = $this->db->get('kategori')->result();
         if($level == "Programmer")
         {
             $this->load->view("programmer/template/header.php");
@@ -48,6 +49,7 @@ class Laporan extends BaseController{
     function laporan_pembelian_tampil(){
         $this->load->model("transaksi_model");
         $id_pengirim = $this->input->post("id_pengirim");
+        $id_kategori = $this->input->post("id_kategori");
         $dari = $this->input->post("dari");
 		$sampai = $this->input->post("sampai");
         $nama_bulan = array(1=>"Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember");
@@ -55,18 +57,93 @@ class Laporan extends BaseController{
 					"dari"=>substr($dari,0,2)."-".$nama_bulan[(int)substr($dari,3,2)]."-".substr($dari,6,4),
 					"sampai"=>substr($sampai,0,2)."-".$nama_bulan[(int)substr($sampai,3,2)]."-".substr($sampai,6,4));
 
-        if($id_pengirim == "*"){
-            $data["gaji"] = $this->db->query("select * from pembelian, pengirim where pembelian.id_pengirim = pengirim.id_pengirim and 
+        if($id_pengirim == "*" && $id_kategori == "*"){
+                
+            $data["gaji"] = $this->db->query("select * from pembelian, pengirim, kategori where 
+            pembelian.id_pengirim = pengirim.id_pengirim and 
+            pembelian.id_kategori = kategori.id and
             (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
             pembelian.status='Selesai' and 
             pembelian.deleted_at is null order by pembelian.tanggal asc");
             $data["pengirim"] = "Semua Pengirim";
+            $data["kategori"] = "Semua Kategori";
             $data["sudah_bayar"] = $this->db->query("select sum(pembelian_bayar.bayar) as paid from pembelian, pembelian_bayar where 
             pembelian.id_pembelian = pembelian_bayar.id_pembelian and 
             (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
             pembelian.status='Selesai' and 
             pembelian.deleted_at is null ");
+        } else if($id_pengirim == "*" && $id_kategori != "*"){
+            
+            $data["gaji"] = $this->db->query("select * from pembelian, pengirim, kategori where 
+            pembelian.id_pengirim = pengirim.id_pengirim and 
+            pembelian.id_kategori = kategori.id and
+            (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+            pembelian.id_kategori='$id_kategori' and
+            pembelian.status='Selesai' and 
+            pembelian.deleted_at is null order by pembelian.tanggal asc");
+            $kt = $this->db->query("select * from kategori where id='$id_kategori' ");
+            if($kt->num_rows() > 0){
+                foreach($kt->result() as $k){
+                    $data["kategori"] = $k->nama_kategori;
+                }
+            }
+            $data["pengirim"] = "Semua Pengirim";
+            $data["sudah_bayar"] = $this->db->query("select sum(pembelian_bayar.bayar) as paid from pembelian, pembelian_bayar where 
+            pembelian.id_pembelian = pembelian_bayar.id_pembelian and 
+            (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+            pembelian.id_kategori='$id_kategori' and
+            pembelian.status='Selesai' and 
+            pembelian.deleted_at is null ");
+        } else if($id_pengirim != "*" && $id_kategori == "*"){
+            
+            $pengirim = $this->input->post("pengirim");
+                $i = 0;
+                foreach($pengirim as $x){
+                    if($i == 0){
+                        $d = "'".$x."'";
+                    }else{
+                        $d .= ",'".$x."'";
+                    }
+                    $i++;
+                }
+
+            $kn = $this->db->query("select * from pengirim where id_pengirim in (".$d.")");
+            if($kn->num_rows() > 0)
+            {
+                
+                $h = 0 ;
+                foreach($kn->result() as $nn){
+                    if($h == 0){
+                        $d_name = $nn->nama_pengirim;
+                    }else{
+                        $d_name .= ",".$nn->nama_pengirim;
+                    }
+                    $h++;
+                }
+                $data["pengirim"] = $d_name;
+            }
+            $data["kategori"] = "Semua Kategori";
+            $data["gaji"] = $this->db->query("select * from pembelian, pengirim, kategori where 
+            pembelian.id_pengirim = pengirim.id_pengirim and 
+            pembelian.id_kategori = kategori.id and
+            (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+            pembelian.id_pengirim in (".$d.") and
+            pembelian.status='Selesai' and 
+            pembelian.deleted_at is null order by pembelian.tanggal asc");
+            $data["sudah_bayar"] = $this->db->query("select sum(pembelian_bayar.bayar) as paid from pembelian, pembelian_bayar where 
+            pembelian.id_pembelian = pembelian_bayar.id_pembelian and 
+            (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+            pembelian.id_pengirim in (".$d.") and
+            pembelian.status='Selesai' and 
+            pembelian.deleted_at is null ");
+
         } else {
+            $kt = $this->db->query("select * from kategori where id='$id_kategori' ");
+            if($kt->num_rows() > 0){
+                foreach($kt->result() as $k){
+                    $data["kategori"] = $k->nama_kategori;
+                }
+            }
             $pengirim = $this->input->post("pengirim");
                 $i = 0;
                 foreach($pengirim as $x){
@@ -94,9 +171,11 @@ class Laporan extends BaseController{
                 $data["pengirim"] = $d_name;
             }
 
-            $data["gaji"] = $this->db->query("select * from pembelian, pengirim where pembelian.id_pengirim = pengirim.id_pengirim and 
+            $data["gaji"] = $this->db->query("select * from pembelian, pengirim, kategori where pembelian.id_pengirim = pengirim.id_pengirim and 
+            pembelian.id_kategori = kategori.id and
             (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
             pembelian.id_pengirim in (".$d.") and
+            pembelian.id_kategori='$id_kategori' and
             pembelian.status='Selesai' and 
             pembelian.deleted_at is null order by pembelian.tanggal asc");
 
@@ -104,6 +183,7 @@ class Laporan extends BaseController{
             pembelian.id_pembelian = pembelian_bayar.id_pembelian and 
             (pembelian.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
             pembelian.id_pengirim in (".$d.") and
+            pembelian.id_kategori='$id_kategori' and
             pembelian.status='Selesai' and 
             pembelian.deleted_at is null ");
         }

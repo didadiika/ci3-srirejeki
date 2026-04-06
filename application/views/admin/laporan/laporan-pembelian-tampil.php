@@ -32,6 +32,10 @@ input.noPrint { display: none; }
   <td width="50%" style="font-size:20px;"><?php echo $lap["dari"]." sampai ".$lap["sampai"];?></td>
   </tr>
   <tr>
+  <td width="50%" style="font-size:20px;">Kategori:</td>
+  <td width="50%" style="font-size:20px;"><?php echo $kategori;?></td>
+  </tr>
+    <tr>
   <td width="50%" style="font-size:20px;">Pengirim:</td>
   <td width="50%" style="font-size:20px;"><?php echo $pengirim;?></td>
   </tr>

@@ -42,6 +42,108 @@ class Data extends BaseController{
 			*/
     }
 
+    function kategori(){
+        
+        #Mengambil data toko di tabel suplier dan memasukkan ke variabel data#
+        $this->load->model("kategori_model");
+        
+        #Mengambil data toko di tabel suplier dan memasukkan ke variabel data#
+
+		#Menampilkan halaman suplier dan mem passing variabel data#
+        $level = $this->session->level;
+        if($level == "Programmer")
+        {
+            $this->load->view("programmer/template/header.php");
+            $this->load->view("programmer/template/menu.php");
+
+        } else if($level == "Owner"){
+            $this->load->view("owner/template/header.php");
+            $this->load->view("owner/template/menu.php");
+        } else if($level == "Admin"){
+            $this->load->view("admin/template/header.php");
+            $this->load->view("admin/template/menu.php");
+        }
+        $this->load->view("admin/data/kategori.php");
+        $this->load->view("admin/template/footer.php");
+        #Menampilkan halaman suplier dan mem passing variabel data#
+    }
+
+
+    function kategori_tampil(){ 
+        #Mengambil data kain secara serverside#
+        $this->load->model("kategori_model");
+        $d = $this->kategori_model->make_datatables();
+        $data = array();
+        $start = isset($_GET["start"]) ? $_GET["start"] : 0;
+        $no = $start + 1;
+        foreach($d as $r){
+            
+            $sub_array = array();
+            $sub_array[] = $no++;
+            $sub_array[] = $r->nama_kategori;
+            $sub_array[] = '
+            <a class="btn btn-sm btn-warning item_edit" href="javascript:void(0)" title="Edit"
+                nama="'.$r->nama_kategori.'" data="'.$r->id.'" ><i class="fa fa-pencil"></i> Edit</a>
+            <a href="javascript:;" class="btn btn-sm btn-danger item_hapus" nama="'.$r->nama_kategori.'"  data="'.$r->id.'">   
+            <i class="fa fa-trash"></i> Hapus</a>';
+            $data[] = $sub_array;
+        }
+        #Mengambil data kategori di tabel kategori dan memasukkan ke variabel data#
+        $draw = "";
+        if(isset($_POST["draw"])){$draw = $_POST["draw"];}
+
+            $output = array(
+                "draw"              => intval($draw),
+                "recordsTotal"      => $this->kategori_model->get_all_data(),
+                "recordsFiltered"   => $this->kategori_model->get_filtered_data(),
+                "data"              => $data
+        
+        );  
+        echo json_encode($output);
+    }
+
+    function kategori_simpan(){
+        $nama = $this->input->post("nama");
+        
+        $data = array("nama_kategori"=>$nama);
+        $this->load->model("kategori_model");
+        $this->kategori_model->simpan_data("kategori",$data);
+        
+        redirect(base_url('data/kategori')); 
+
+    }
+
+
+    function kategori_update(){
+        $this->load->model("kategori_model");
+        $id = $this->input->post("id_update");
+        
+        $nama = $this->input->post("nama_update");
+        
+
+        $data = array("nama_kategori"=>$nama);
+        $where = array("id"=>$id);
+
+        
+        $this->kategori_model->update_data("kategori",$data,$where);
+
+        redirect(base_url('data/kategori')); 
+        
+    }
+
+
+    function kategori_hapus(){
+        $id = $this->input->post("id");
+        
+        $data = array("deleted_at"=>date("Y-m-d H:i:s"));
+        $where = array("id"=>$id);
+
+        $this->load->model("kategori_model");
+        $this->kategori_model->update_data("kategori",$data,$where);
+
+        redirect(base_url('data/kategori')); 
+        
+    }
 
     function pengirim(){
         

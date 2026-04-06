@@ -64,6 +64,7 @@ $route["setting/setting-backup"] = "setting/setting_backup";
 $route["setting/setting-maintenance"] = "setting/setting_maintenance";
 
 /* ROUTE ADMIN */
+$route["data/kategori"] = "data/kategori";
 $route["data/pengirim"] = "data/pengirim";
 $route["data/pelanggan"] = "data/pelanggan";
 $route["data/karyawan"] = "data/karyawan";

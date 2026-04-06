@@ -1,18 +1,18 @@
 <?php
-class Pembelian_Model extends CI_Model{
+class Pembelian_Ir_Model extends CI_Model{
     var $tabel = "pembelian";
     var $where = "pembelian.deleted_at is NULL";
 	var $pilih_kolom = "*";
 	var $order_kolom = array(NULL,"pengirim.nama_pengirim","pembelian.no_polisi","pembelian.tanggal","pembelian.total_tonase",
     "pembelian.harga_satuan","pembelian.harga_kbk","pembelian.status", NULL);
-	    
+
     function tampil_data(){
       
         
         $this->db->select($this->pilih_kolom);
 		$this->db->from($this->tabel);
         $this->db->where($this->where);
-        $this->db->where('kategori.nama_kategori', 'Ketan');
+        $this->db->where('kategori.nama_kategori', 'IR');
         $this->db->join('pengirim','pengirim.id_pengirim = pembelian.id_pengirim','inner');
         $this->db->join('kategori','kategori.id = pembelian.id_kategori','inner');
 
@@ -41,7 +41,6 @@ class Pembelian_Model extends CI_Model{
 		}
     }
 
-
     function make_datatables(){
 		$this->tampil_data();
 		if(isset($_GET["length"]) && isset($_GET["start"]))
@@ -56,20 +55,21 @@ class Pembelian_Model extends CI_Model{
 		return $query->result();
 	}
 
-	function get_filtered_data(){
+    function get_filtered_data(){
 		$this->tampil_data();
 		$query = $this->db->get();
 
 		return $query->num_rows();
 	}
 
-	function get_all_data(){
+    function get_all_data(){
 		$this->db->select("*");
 		$this->db->from($this->tabel);
         $this->db->where($this->where);
-        $this->db->where('kategori.nama_kategori', 'Ketan');
+        $this->db->where('kategori.nama_kategori', 'IR');
         $this->db->join('pengirim','pengirim.id_pengirim = pembelian.id_pengirim','inner');
         $this->db->join('kategori','kategori.id = pembelian.id_kategori','inner');
+
 
 
 		return $this->db->count_all_results();

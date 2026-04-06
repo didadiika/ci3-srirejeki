@@ -28,6 +28,7 @@
             </span>
           </a>
           <ul class="treeview-menu">
+            <li <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "kategori"){echo"class='active'";} ?>><a href="<?php echo base_url('data/kategori');?>"><i class="fa <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "kategori"){echo "fa-circle";} else{echo "fa-circle-o";} ?>"></i> Data Kategori</a></li>
             <li <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "pengirim"){echo"class='active'";} ?>><a href="<?php echo base_url('data/pengirim');?>"><i class="fa <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "pengirim"){echo "fa-circle";} else{echo "fa-circle-o";} ?>"></i> Data Pengirim</a></li>
             <li <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "pelanggan"){echo"class='active'";} ?>><a href="<?php echo base_url('data/pelanggan');?>"><i class="fa <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "pelanggan"){echo "fa-circle";} else{echo "fa-circle-o";} ?>"></i> Data Pelanggan</a></li>
             <li <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "karyawan"){echo"class='active'";} ?>><a href="<?php echo base_url('data/karyawan');?>"><i class="fa <?php if($this->uri->segment(1) == "data"  && $this->uri->segment(2) == "karyawan"){echo "fa-circle";} else{echo "fa-circle-o";} ?>"></i> Data Karyawan</a></li>

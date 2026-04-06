@@ -1,15 +1,48 @@
 <script type="text/javascript">
   
 $(document).ready(function(){
-  var table = $('#tabel').DataTable({
+
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+});
+  var table_ketan = $('#tabel-ketan').DataTable({
      "language": {
             "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Indonesian.json"
         },
         "processing": true,
         "serverSide": true,
         "order": [],
+        autoWidth: false,
+        scrollX: true,
         "ajax": {
               url:"<?php echo base_url('pembelian/tampil');?>",
+              type:"GET",
+        },
+        "columnDefs": [ {
+            "targets": 0,
+            "orderable":false,
+            "searchable":false
+        },
+      {
+            "targets": 10,
+            "orderable":false,
+            "searchable":false
+      }],
+      
+
+    });
+
+  var table_ir = $('#tabel-ir').DataTable({
+     "language": {
+            "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Indonesian.json"
+        },
+        "processing": true,
+        "serverSide": true,
+        autoWidth: false,
+        scrollX: true,
+        "order": [],
+        "ajax": {
+              url:"<?php echo base_url('pembelian/tampil_ir');?>",
               type:"GET",
         },
         "columnDefs": [ {
@@ -39,7 +72,8 @@ $.ajax({
     success: function(data)
     {
       console.log('Submit Berhasil !');
-      table.ajax.reload(null, false);
+      table_ketan.ajax.reload(null, false);
+      table_ir.ajax.reload(null, false);
     },
     error: function (data) {
       console.log('Submit Error !');
@@ -52,7 +86,7 @@ $("#modal-buat").modal('hide');
 
 
 //GET HAPUS
-$('#tabel').on('click','.item_hapus',function(){
+$('#tabel-ketan').on('click','.item_hapus',function(){
             var id=$(this).attr('data');
             var nama=$(this).attr('nama');
             $('#ModalHapus').modal('show');
@@ -60,7 +94,21 @@ $('#tabel').on('click','.item_hapus',function(){
             $('#nama').html(nama);
         });
 
-$('#tabel').on('click','.item_selesai',function(){
+$('#tabel-ir').on('click','.item_hapus',function(){
+            var id=$(this).attr('data');
+            var nama=$(this).attr('nama');
+            $('#ModalHapus').modal('show');
+            $('[name="id_hapus"]').val(id);
+            $('#nama').html(nama);
+        });
+
+$('#tabel-ketan').on('click','.item_selesai',function(){
+            var id=$(this).attr('data-selesai');
+            $('#ModalSelesai').modal('show');
+            $('[name="id_selesai"]').val(id);
+});
+
+$('#tabel-ir').on('click','.item_selesai',function(){
             var id=$(this).attr('data-selesai');
             $('#ModalSelesai').modal('show');
             $('[name="id_selesai"]').val(id);
@@ -76,7 +124,8 @@ $('#tabel').on('click','.item_selesai',function(){
             data : {id_hapus: id},
                     success: function(data){
                             $('#ModalHapus').modal('hide');
-                            table.ajax.reload();
+                            table_ketan.ajax.reload();
+                            table_ir.ajax.reload();
                             $('#btn_hapus').prop("disabled",false);
                     }
                 });
@@ -93,7 +142,8 @@ $('#tabel').on('click','.item_selesai',function(){
             data : {id_selesai: id},
                     success: function(data){
                             $('#ModalSelesai').modal('hide');
-                            table.ajax.reload();
+                            table_ketan.ajax.reload();
+                            table_ir.ajax.reload();
                             $('#btn_selesai').prop("disabled",false);
                     }
                 });
@@ -103,7 +153,44 @@ $('#tabel').on('click','.item_selesai',function(){
 
       /*------------------------------PEMBAYARAN----------------------------*/
 
-      $('#tabel').on('click','.item_bayar',function(){
+      $('#tabel-ketan').on('click','.item_bayar',function(){
+                  $("#form-bayar")[0].reset();
+                  var id = $(this).attr('data');
+                  var tgl = $(this).attr('tanggal-pembelian');
+                  var tot = $(this).attr('total-pembelian');
+                  var peng = $(this).attr('pengirim');
+                  var dibayar = $(this).attr('dibayar');
+                  var sisa = $(this).attr('sisa');
+
+                  $('#modal-input-bayar').modal('show');
+                  $('[name="id_bayar"]').val(id);
+                  $('[name="tanggal_pembelian"]').val(tgl);
+                  $('[name="pengirim"]').val(peng);
+                  $('[name="total_pembelian"]').val(uang(tot));
+                  $('[name="sudah_dibayar"]').val(uang(dibayar));
+                  $('[name="sisa"]').val(uang(sisa));
+
+                  if (AutoNumeric.getAutoNumericElement('[name="bayar"]') === null) {
+                        const autoNumericOptionsRp = {
+                          allowDecimalPadding        : false, 
+                          currencySymbol             : '',
+                          currencySymbolPlacement    : 'p',
+                          decimalCharacter           : ',',
+                          digitGroupSeparator        : '.',
+                          emptyInputBehavior         : 'focus',
+                          maximumValue               : sisa
+                      };
+                        mata = new AutoNumeric('[name="bayar"]', autoNumericOptionsRp);
+                      }
+                      else
+                      {
+                        
+                        AutoNumeric.set('[name="bayar"]','0');
+                        mata.update({ maximumValue : sisa });
+                      }
+      });
+
+      $('#tabel-ir').on('click','.item_bayar',function(){
                   $("#form-bayar")[0].reset();
                   var id = $(this).attr('data');
                   var tgl = $(this).attr('tanggal-pembelian');
@@ -153,7 +240,8 @@ $('#tabel').on('click','.item_selesai',function(){
           success: function(data)
           {
             console.log('Submit Berhasil !');
-            table.ajax.reload(null, false);
+            table_ketan.ajax.reload(null, false);
+            table_ir.ajax.reload(null, false);
           },
           error: function (data) {
             console.log('Submit Error !');
@@ -163,7 +251,7 @@ $('#tabel').on('click','.item_selesai',function(){
       $("#modal-input-bayar").modal('hide');
       });
 
-      $('#tabel').on('click','.item_riwayat',function(){
+      $('#tabel-ketan').on('click','.item_riwayat',function(){
                   var id = $(this).attr('data');
 
                   $("#printSection-history").load('<?php echo base_url('transaksi/pembelian/riwayat-pembayaran');?>/'+id);
@@ -320,6 +408,20 @@ $('#tabel').on('click','.item_selesai',function(){
       </div>
 
       <div id="tagNama" class="form-group">
+          <label class="control-label" for="inputError"><i id="iconNama"></i> Pilih Kategori</label>
+          <select name="id_kategori"  class="form-control" id="id_kategori" required>
+            <option value="">Pilih Kategori*</option>
+            <?php
+            foreach ($kategori as $k) {
+              echo '<option value="'.$k->id.'">'.$k->nama_kategori.'</option>';
+            }
+
+            ?>
+          </select>
+          <span class="help-block" id="pesanNama"></span>
+      </div>
+
+      <div id="tagNama" class="form-group">
           <label class="control-label" for="inputError"><i id="iconNama"></i> Pilih Pengirim</label>
           <select name="id_pengirim"  class="form-control select2" style="width: 100%;" id="id_pengirim" required>
           </select>
@@ -360,14 +462,31 @@ $('#tabel').on('click','.item_selesai',function(){
 <div class="box">
   <!--Tombol Tambah Data-->
 
-            <div class="box-header">
-              <h3 class="box-title">Daftar Pembelian</h3>
-            </div>
-            <!-- /.box-header -->
-            <div class="box-body">
-              <div class="table-responsive">
-              
-              <table id="tabel" class="table table-bordered table-striped">
+
+   <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+              <?php
+              $counter = 0;
+              foreach ($kategori as $k) {
+                if ($counter == 0) {
+                  echo '<li class="active"><a href="#tab_'.$k->id.'" data-toggle="tab">'.$k->nama_kategori.'</a></li>';
+                }
+                else
+                {
+                  echo '<li><a href="#tab_'.$k->id.'" data-toggle="tab">'.$k->nama_kategori.'</a></li>';
+                }
+                $counter++;
+              } 
+              ?>
+            </ul>
+            <div class="tab-content">
+              <?php
+              $counter = 0;
+              foreach ($kategori as $k) {
+                  $isActive = ($counter == 0) ? 'active' : '';
+                  echo '<div class="tab-pane '.$isActive.'" id="tab_'.$k->id.'">';
+              ?>
+              <table id="tabel-<?php echo strtolower($k->nama_kategori);  ?>" class="table table-bordered table-striped">
                 <thead>
                 <tr>
                   <th>No</th>
@@ -384,58 +503,65 @@ $('#tabel').on('click','.item_selesai',function(){
                 </tr>
                 </thead>
               </table>
+              <?php
+                  echo '</div>';
+                  $counter++;
+                
+              }
+              ?>
             </div>
-            <!--MODAL HAPUS-->
-        <div class="modal modal-danger fade" id="ModalHapus" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
-                        <h4 class="modal-title" id="myModalLabel">Konfirmasi Hapus Pembelian</h4>
-                    </div>
-                    <form class="form-horizontal">
-                    <div class="modal-body">
-                                           
-                            <input type="hidden" name="id_hapus" id="id_hapus" value="">
-                            <div class="alert alert-default"><p>Apakah Anda yakin mau menghapus Pembelian <span id="nama"></span> ?</p></div>
-                                         
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
-                        <button class="btn_hapus btn btn-danger" id="btn_hapus">Hapus</button>
-                    </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!--END MODAL HAPUS-->
+    </div>
 
-        <!--MODAL SELESAI-->
-        <div class="modal modal-info fade" id="ModalSelesai" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span></button>
-                        <h4 class="modal-title" id="myModalLabel">Konfirmasi Penyelesaian</h4>
-                    </div>
-                    <form class="form-horizontal">
-                    <div class="modal-body">
-                                           
-                            <input type="hidden" name="id_selesai" id="id_selesai" value="">
-                            <div class="alert alert-default"><p>Selesaikan Pembelian Ini ?</p></div>
-                                         
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
-                        <button class="btn_hapus btn btn-info" id="btn_selesai">Selesai</button>
-                    </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!--END MODAL SELESAI-->
-           
 
-            <!-- /.box-body -->
-          </div>
-          </section>
+
+            
+ <!--MODAL HAPUS-->
+<div class="modal modal-danger fade" id="ModalHapus" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
+<h4 class="modal-title" id="myModalLabel">Konfirmasi Hapus Pembelian</h4>
+</div>
+<form class="form-horizontal">
+<div class="modal-body">
+    
+<input type="hidden" name="id_hapus" id="id_hapus" value="">
+<div class="alert alert-default"><p>Apakah Anda yakin mau menghapus Pembelian <span id="nama"></span> ?</p></div>
+  
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+<button class="btn_hapus btn btn-danger" id="btn_hapus">Hapus</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!--END MODAL HAPUS-->
+
+<!--MODAL SELESAI-->
+<div class="modal modal-info fade" id="ModalSelesai" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span></button>
+<h4 class="modal-title" id="myModalLabel">Konfirmasi Penyelesaian</h4>
+</div>
+<form class="form-horizontal">
+<div class="modal-body">
+
+<input type="hidden" name="id_selesai" id="id_selesai" value="">
+<div class="alert alert-default"><p>Selesaikan Pembelian Ini ?</p></div>
+
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+<button class="btn_hapus btn btn-info" id="btn_selesai">Selesai</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!--END MODAL SELESAI-->
+</section>

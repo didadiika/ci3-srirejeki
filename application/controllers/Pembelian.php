@@ -18,6 +18,7 @@ class Pembelian extends BaseController
     {
         // Menentukan header & menu berdasarkan level user
         $level = $this->session->level;
+        $data['kategori'] = $this->db->get('kategori')->result();
 
         if ($level === 'Programmer') {
             $this->load->view('programmer/template/header.php');
@@ -30,7 +31,7 @@ class Pembelian extends BaseController
             $this->load->view('admin/template/menu.php');
         }
 
-        $this->load->view('admin/transaksi/pembelian.php');
+        $this->load->view('admin/transaksi/pembelian.php', $data);
         $this->load->view('admin/template/footer.php');
     }
 
@@ -170,6 +171,143 @@ class Pembelian extends BaseController
         echo json_encode($output);
     }
 
+
+    public function tampil_ir()
+    {
+        // Serverside data
+        $this->load->model('pembelian_ir_model');
+
+        $start = isset($_GET['start']) ? (int) $_GET['start'] : 0;
+        $no    = $start + 1;
+
+        $d    = $this->pembelian_ir_model->make_datatables();
+        $data = [];
+
+        foreach ($d as $r) {
+            // Akumulasi pembayaran
+            $bayar = 0;
+            $by    = $this->db->query("
+                SELECT SUM(bayar) AS bayar
+                FROM pembelian_bayar
+                WHERE id_pembelian = '$r->id_pembelian' AND deleted_at IS NULL
+            ");
+
+            if ($by->num_rows() > 0) {
+                foreach ($by->result() as $b) {
+                    $bayar = (float) $b->bayar;
+                }
+            }
+
+            $sub_array   = [];
+            $sub_array[] = $no++;
+            $sub_array[] = tgl_pecah($r->tanggal);
+            $sub_array[] = $r->no_polisi;
+            $sub_array[] = $r->nama_pengirim;
+            $sub_array[] = (int) $r->total_tonase;
+            $sub_array[] = uang($r->harga_satuan);
+            $sub_array[] = uang($r->harga_satuan * $r->total_tonase);
+
+            if ($r->status === 'Proses') {
+                $sub_array[] = '<span class="badge btn-warning">Proses</span>';
+
+                if ($r->status_bayar === 'Belum Lunas') {
+                    $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>';
+                } else {
+                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
+                }
+
+                $sub_array[] = uang(($r->harga_satuan * $r->total_tonase) - $bayar);
+
+                if ($r->harga_satuan > 0 && $r->harga_kbk > 0) {
+                    $sub_array[] = '
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default">Pilih</button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="' . base_url('transaksi/pembelian/tambah-timbangan/' . $r->id_pembelian) . '">Tambah Timbangan</a></li>
+                                <li><a href="javascript:;" class="item_selesai" data-selesai="' . $r->id_pembelian . '">Selesai</a></li>
+                                <li><a href="javascript:;" class="item_hapus" data="' . $r->id_pembelian . '">Hapus</a></li>
+                            </ul>
+                        </div>';
+                } else {
+                    $sub_array[] = '
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default">Pilih</button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="' . base_url('transaksi/pembelian/tambah-timbangan/' . $r->id_pembelian) . '">Tambah Timbangan</a></li>
+                                <li><a href="javascript:;" class="item_hapus" data="' . $r->id_pembelian . '">Hapus</a></li>
+                            </ul>
+                        </div>';
+                }
+            } else {
+                if ($r->status_bayar === 'Belum Lunas') {
+                    $sub_array[] = '<span class="badge btn-primary">Selesai</span>';
+                    $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>';
+                    $sub_array[] = uang(($r->harga_satuan * $r->total_tonase) - $bayar);
+                    $sub_array[] = '
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default">Pilih</button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="' . base_url('transaksi/pembelian/tambah-timbangan/' . $r->id_pembelian) . '">Lihat</a></li>
+                                <li>
+                                    <a href="javascript:void(0)" data="' . $r->id_pembelian . '" class="item_bayar"
+                                       tanggal-pembelian="' . tgl_pecah($r->tanggal) . '" pengirim="' . $r->nama_pengirim . '"
+                                       total-pembelian="' . ((int) $r->harga_satuan * $r->total_tonase) . '" dibayar="' . (int) $bayar . '"
+                                       sisa="' . (int) (($r->harga_satuan * $r->total_tonase) - $bayar) . '">Input Pembayaran
+                                    </a>
+                                </li>
+                                <li><a href="javascript:void(0)" data="' . $r->id_pembelian . '" class="item_riwayat">Riwayat Pembayaran</a></li>
+                                <li><a href="' . base_url('transaksi/pembelian/cetak-nota/' . $r->id_pembelian) . '" target="_blank">Cetak</a></li>
+                                <li><a href="javascript:;" class="item_hapus" data="' . $r->id_pembelian . '">Hapus</a></li>
+                            </ul>
+                        </div>';
+                } else {
+                    $sub_array[] = '<span class="badge btn-primary">Selesai</span>';
+                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
+                    $sub_array[] = uang(($r->harga_satuan * $r->total_tonase) - $bayar);
+                    $sub_array[] = '
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default">Pilih</button>
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="' . base_url('transaksi/pembelian/tambah-timbangan/' . $r->id_pembelian) . '">Lihat</a></li>
+                                <li><a href="javascript:void(0)" data="' . $r->id_pembelian . '" class="item_riwayat">Riwayat Pembayaran</a></li>
+                                <li><a href="' . base_url('transaksi/pembelian/cetak-nota/' . $r->id_pembelian) . '" target="_blank">Cetak</a></li>
+                                <li><a href="javascript:;" class="item_hapus" data="' . $r->id_pembelian . '">Hapus</a></li>
+                            </ul>
+                        </div>';
+                }
+            }
+
+            $data[] = $sub_array;
+        }
+
+        $draw = isset($_POST['draw']) ? $_POST['draw'] : '';
+
+        $output = [
+            'draw'            => (int) $draw,
+            'recordsTotal'    => $this->pembelian_ir_model->get_all_data(),
+            'recordsFiltered' => $this->pembelian_ir_model->get_filtered_data(),
+            'data'            => $data,
+        ];
+
+        echo json_encode($output);
+    }
+
     public function tambah_timbangan($id)
     {
         // Header & menu
@@ -190,9 +328,10 @@ class Pembelian extends BaseController
             $this->load->model('pembelian_model');
 
             $data['pembelian'] = $this->db->query("
-                SELECT * FROM pembelian, pengirim
+                SELECT * FROM pembelian, pengirim, kategori
                 WHERE pembelian.id_pembelian = '$id'
                   AND pembelian.id_pengirim = pengirim.id_pengirim
+                  AND pembelian.id_kategori = kategori.id
             ");
 
             $data['timbangan'] = $this->db->query("
@@ -209,6 +348,7 @@ class Pembelian extends BaseController
 
     public function buat()
     {
+        $id_kategori     = $this->input->post('id_kategori');
         $id_pengirim     = $this->input->post('id_pengirim');
         $tanggal         = tgl_pecah($this->input->post('tanggal'));
         $no_polisi       = $this->input->post('no_polisi');
@@ -232,6 +372,7 @@ class Pembelian extends BaseController
         $id   = id_primary();
         $data = [
             'id_pembelian'   => $id,
+            'id_kategori'    => $id_kategori,
             'id_pengirim'    => $id_pengirim,
             'tanggal'        => $tanggal,
             'no_polisi'      => $no_polisi,

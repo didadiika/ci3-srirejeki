@@ -74,6 +74,20 @@
         <!-- /.box-header -->
         <div class="box-body">
           <form role="form" action='<?php echo base_url('laporan/laporan-pembelian-tampil');?>' method='post' target='_blank' autocomplete="off">
+          <div id="tagNama" class="form-group">
+                  <label class="control-label" for="inputError"><i id="iconNama"></i> Pengirim</label>
+                  <select name="id_kategori" id="kategori_id" class="form-control"  required>
+                      <option value="*">Semua Kategori</option>
+                  <?php 
+                        foreach($kategori as $k){
+                          echo "<option value='$k->id'>$k->nama_kategori</option>";
+                        } 
+                  ?>
+                  </select>
+                  <span class="help-block" id="pesanNama"></span>
+            </div>
+
+
            <div id="tagNama" class="form-group">
                   <label class="control-label" for="inputError"><i id="iconNama"></i> Pengirim</label>
                   <select name="id_pengirim" id="pengirim_id" class="form-control"  required onchange="showKategori()">
