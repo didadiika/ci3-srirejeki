@@ -157,8 +157,8 @@ class Invoice extends BaseController{
 
     function tampil_ir(){
 		#Mengambil data kain secara serverside#
-		$this->load->model("invoice_ir_model");
-		$d = $this->invoice_ir_model->make_datatables();
+		$this->load->model("Invoice_Ir_Model");
+		$d = $this->Invoice_Ir_Model->make_datatables();
 		$data = array();
 		$start = isset($_GET["start"]) ? $_GET["start"] : 0;
 		$no = $start + 1;
@@ -260,8 +260,8 @@ class Invoice extends BaseController{
 
 			$output = array(
 				"draw" 				=> intval($draw),
-				"recordsTotal" 		=> $this->invoice_ir_model->get_all_data(),
-				"recordsFiltered" 	=> $this->invoice_ir_model->get_filtered_data(),
+				"recordsTotal" 		=> $this->Invoice_Ir_Model->get_all_data(),
+				"recordsFiltered" 	=> $this->Invoice_Ir_Model->get_filtered_data(),
 				"data"				=> $data
 		
 		);
