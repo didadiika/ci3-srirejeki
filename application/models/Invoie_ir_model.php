@@ -1,5 +1,5 @@
 <?php
-class Invoice_Ir_Model extends CI_Model{
+class Invoice_ir_Model extends CI_Model{
     var $tabel = "invoice";
     var $where = "invoice.deleted_at is NULL";
 	var $pilih_kolom = "*";
