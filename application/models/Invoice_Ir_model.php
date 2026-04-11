@@ -1,5 +1,5 @@
 <?php
-class Invoice_Model extends CI_Model{
+class Invoice_Ir_Model extends CI_Model{
     var $tabel = "invoice";
     var $where = "invoice.deleted_at is NULL";
 	var $pilih_kolom = "*";
@@ -11,7 +11,7 @@ class Invoice_Model extends CI_Model{
         $this->db->select($this->pilih_kolom);
 		$this->db->from($this->tabel);
         $this->db->where($this->where);
-        $this->db->where('kategori.nama_kategori', 'Ketan');
+        $this->db->where('kategori.nama_kategori', 'IR');
         $this->db->join('pelanggan','pelanggan.id_pelanggan = invoice.id_pelanggan','inner');
         $this->db->join('kategori','kategori.id = invoice.id_kategori','inner');
 
@@ -62,10 +62,9 @@ class Invoice_Model extends CI_Model{
 		$this->db->select("*");
 		$this->db->from($this->tabel);
         $this->db->where($this->where);
-        $this->db->where('kategori.nama_kategori', 'Ketan');
+        $this->db->where('kategori.nama_kategori', 'IR');
         $this->db->join('pelanggan','pelanggan.id_pelanggan = invoice.id_pelanggan','inner');
         $this->db->join('kategori','kategori.id = invoice.id_kategori','inner');
-
 
 		return $this->db->count_all_results();
 	}

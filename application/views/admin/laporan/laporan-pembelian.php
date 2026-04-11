@@ -75,7 +75,7 @@
         <div class="box-body">
           <form role="form" action='<?php echo base_url('laporan/laporan-pembelian-tampil');?>' method='post' target='_blank' autocomplete="off">
           <div id="tagNama" class="form-group">
-                  <label class="control-label" for="inputError"><i id="iconNama"></i> Pengirim</label>
+                  <label class="control-label" for="inputError"><i id="iconNama"></i> Kategori</label>
                   <select name="id_kategori" id="kategori_id" class="form-control"  required>
                       <option value="*">Semua Kategori</option>
                   <?php 

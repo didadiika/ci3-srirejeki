@@ -23,6 +23,7 @@ class Invoice extends BaseController{
 
 		#Menampilkan halaman suplier dan mem passing variabel data#
         $level = $this->session->level;
+        $data['kategori'] = $this->db->get('kategori')->result();
         if($level == "Programmer")
         {
             $this->load->view("programmer/template/header.php");
@@ -35,7 +36,7 @@ class Invoice extends BaseController{
             $this->load->view("admin/template/header.php");
             $this->load->view("admin/template/menu.php");
         }
-        $this->load->view("admin/transaksi/invoice.php");
+        $this->load->view("admin/transaksi/invoice.php", $data);
         $this->load->view("admin/template/footer.php");
         #Menampilkan halaman suplier dan mem passing variabel data#
     }
@@ -154,6 +155,120 @@ class Invoice extends BaseController{
 		echo json_encode($output);
 	}
 
+    function tampil_ir(){
+		#Mengambil data kain secara serverside#
+		$this->load->model("invoice_ir_model");
+		$d = $this->invoice_ir_model->make_datatables();
+		$data = array();
+		$start = isset($_GET["start"]) ? $_GET["start"] : 0;
+		$no = $start + 1;
+		foreach($d as $r){
+		    /* Ambil akumulasi pembayaran */
+            $bayar = 0;
+            $by = $this->db->query("select sum(bayar) as bayar from invoice_bayar where id_invoice='$r->id_invoice' and deleted_at is null");
+            if($by->num_rows() > 0){
+                foreach($by->result() as $b){
+                    $bayar = $b->bayar;
+                }
+            }
+            /* -------------------------------------------------- */
+
+			$sub_array = array();
+			$sub_array[] = $no++;
+            $sub_array[] = tgl_pecah($r->tanggal);
+            $sub_array[] = $r->nama_pelanggan;
+            $sub_array[] = $r->no_polisi;
+            $sub_array[] = uang($r->harga_kbk);
+            $sub_array[] = uang($r->total);
+            
+            if($r->status == "Proses")
+            {
+                $sub_array[] = '<span class="badge btn-warning">Proses</span>';
+                if($r->status_bayar == "Belum Lunas"){ $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>'; } else {
+                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
+                }
+                $sub_array[] = uang($r->total - $bayar);
+                
+                    $sub_array[] = '
+                    <div class="btn-group">
+                    <button type="button" class="btn btn-default">Pilih</button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                        <ul class="dropdown-menu" role="menu">
+                        <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Tambah Barang</a></li>
+                        <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
+                        </ul>
+                    </div>';
+                
+                
+            }
+            else
+            {
+                $sub_array[] = '<span class="badge btn-primary">Selesai</span>';
+                if($r->status_bayar == "Belum Lunas"){ 
+                    $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>'; 
+                    $sub_array[] = uang($r->total - $bayar);
+                    $sub_array[] = '
+                    <div class="btn-group">
+                    <button type="button" class="btn btn-default">Pilih</button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                        <ul class="dropdown-menu" role="menu">
+                        <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_bayar"
+                        tanggal-invoice="'.tgl_pecah($r->tanggal).'" pelanggan="'.$r->nama_pelanggan.'" 
+                        total-invoice="'.(int)$r->total.'" dibayar="'.(int)$bayar.'" sisa="'.(int)($r->total - $bayar).'"
+                        >Input Pembayaran</a></li>
+                        <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>
+                        <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
+                        </ul>
+                    </div>';
+                } else {
+                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
+                    $sub_array[] = uang($r->total - $bayar);
+                    $sub_array[] = '
+                    <div class="btn-group">
+                    <button type="button" class="btn btn-default">Pilih</button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                        <ul class="dropdown-menu" role="menu">
+                        <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>
+                        <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
+                        </ul>
+                    </div>';
+                    
+                }
+                
+            }
+			
+			$data[] = $sub_array;
+		}
+		#Mengambil data kategori di tabel kategori dan memasukkan ke variabel data#
+		$draw = "";
+		if(isset($_POST["draw"])){$draw = $_POST["draw"];}
+
+			$output = array(
+				"draw" 				=> intval($draw),
+				"recordsTotal" 		=> $this->invoice_ir_model->get_all_data(),
+				"recordsFiltered" 	=> $this->invoice_ir_model->get_filtered_data(),
+				"data"				=> $data
+		
+		);
+
+		echo json_encode($output);
+	}
+
     function tambah_barang($id){
         
 
@@ -193,6 +308,7 @@ class Invoice extends BaseController{
 
 
     function buat(){
+        $id_kategori     = $this->input->post('id_kategori');
         $id_pelanggan = $this->input->post("id_pelanggan");
         $tanggal = tgl_pecah($this->input->post("tanggal"));
         $no_polisi = $this->input->post("no_polisi"); 
@@ -205,7 +321,7 @@ class Invoice extends BaseController{
         }
         
         $id = id_primary();
-        $data = array("id_invoice"=>$id,"id_pelanggan"=>$id_pelanggan,"no_polisi"=>$no_polisi,"tanggal"=>$tanggal,"harga_kbk"=>$harga_kbk,"status"=>"Proses");
+        $data = array("id_invoice"=>$id,"id_kategori"=>$id_kategori,"id_pelanggan"=>$id_pelanggan,"no_polisi"=>$no_polisi,"tanggal"=>$tanggal,"harga_kbk"=>$harga_kbk,"status"=>"Proses");
         $this->load->model("invoice_model");
         $this->invoice_model->simpan_data("invoice",$data);
         

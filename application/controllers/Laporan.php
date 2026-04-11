@@ -196,6 +196,7 @@ class Laporan extends BaseController{
     function laporan_penjualan(){
        
         $level = $this->session->level;
+        $data['kategori'] = $this->db->get('kategori')->result();
         if($level == "Programmer")
         {
             $this->load->view("programmer/template/header.php");
@@ -215,6 +216,7 @@ class Laporan extends BaseController{
     }
 
     function laporan_penjualan_tampil(){
+        $id_kategori = $this->input->post("id_kategori");
 		$jenis = $this->input->post("jenis");
         $pelanggan = $this->input->post("id_pelanggan");
 		$dari = $this->input->post("dari");
@@ -230,51 +232,106 @@ class Laporan extends BaseController{
 
         if($jenis == "Tampil per Nota")
         {
-            if($pelanggan == "*"){
+            if($pelanggan == "*" && $id_kategori == "*"){
                 $data["gaji"] = $this->db->query("select * from pelanggan, invoice where invoice.id_pelanggan = pelanggan.id_pelanggan and 
                 (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
                 invoice.status='Selesai' and 
                 invoice.deleted_at is null order by invoice.tanggal asc");
                 $data["pelanggan"] = "Semua Pelanggan";
-                } else {
+                $data["kategori"] = "Semua Kategori";
+                } 
+                else if($pelanggan == "*" && $id_kategori != "*"){
                 $data["gaji"] = $this->db->query("select * from pelanggan, invoice where invoice.id_pelanggan = pelanggan.id_pelanggan and 
                 (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
-                invoice.id_pelanggan='$pelanggan' and
+                invoice.id_kategori='$id_kategori' and
                 invoice.status='Selesai' and 
                 invoice.deleted_at is null order by invoice.tanggal asc");
-                $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
-                if($pen->num_rows() > 0){
-                    foreach($pen->result() as $p){
-                        $data["pelanggan"] = $p->nama_pelanggan;
-                    }
+                $data["pelanggan"] = "Semua Pelanggan";
+                $data["kategori"] = $this->db->get_where('kategori', array('id' => $id_kategori))->row()->nama_kategori;
                 }
+                else if($pelanggan != "*" && $id_kategori == "*"){
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_pelanggan='$pelanggan' and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
+                    if($pen->num_rows() > 0){
+                        foreach($pen->result() as $p){
+                            $data["pelanggan"] = $p->nama_pelanggan;
+                        }
+                    }
+                    $data["kategori"] = "Semua Kategori";
+                }
+                else if($pelanggan != "*" && $id_kategori != "*") {
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_pelanggan='$pelanggan' and
+                    invoice.id_kategori='$id_kategori' and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
+                    if($pen->num_rows() > 0){
+                        foreach($pen->result() as $p){
+                            $data["pelanggan"] = $p->nama_pelanggan;
+                        }
+                    }
+                    $data["kategori"] = $this->db->get_where('kategori', array('id' => $id_kategori))->row()->nama_kategori;
                     
                 }
             #Menampilkan halaman#
             $this->load->view("admin/laporan/laporan-penjualan-per-nota-tampil.php",$data);
             #Menampilkan halaman#
         } else if($jenis == "Tampil Rinci"){
-            if($pelanggan == "*"){
-                $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
-                (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
-                invoice.id_invoice = invoice_d.id_invoice and
-                invoice.status='Selesai' and 
-                invoice.deleted_at is null order by invoice.tanggal asc");
-                $data["pelanggan"] = "Semua Pelanggan";
-                } else {
-                $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
-                (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
-                invoice.id_invoice = invoice_d.id_invoice and
-                invoice.id_pelanggan='$pelanggan' and
-                invoice.status='Selesai' and 
-                invoice.deleted_at is null order by invoice.tanggal asc");
-                $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
-                if($pen->num_rows() > 0){
-                    foreach($pen->result() as $p){
-                        $data["pelanggan"] = $p->nama_pelanggan;
-                    }
+            if($pelanggan == "*" && $id_kategori == "*"){
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_invoice = invoice_d.id_invoice and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $data["pelanggan"] = "Semua Pelanggan";
+                    $data["kategori"] = "Semua Kategori";
                 }
-                    
+                else if($pelanggan == "*" && $id_kategori != "*"){
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_invoice = invoice_d.id_invoice and
+                    invoice.id_kategori='$id_kategori' and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $data["pelanggan"] = "Semua Pelanggan";
+                    $data["kategori"] = $this->db->get_where('kategori', array('id' => $id_kategori))->row()->nama_kategori;
+                }
+                else if($pelanggan != "*" && $id_kategori == "*"){
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_invoice = invoice_d.id_invoice and
+                    invoice.id_pelanggan='$pelanggan' and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
+                    if($pen->num_rows() > 0){
+                        foreach($pen->result() as $p){
+                            $data["pelanggan"] = $p->nama_pelanggan;
+                        }
+                    }
+                    $data["kategori"] = "Semua Kategori";
+                }
+                else if($pelanggan != "*" && $id_kategori != "*"){
+                    $data["gaji"] = $this->db->query("select * from pelanggan, invoice, invoice_d where invoice.id_pelanggan = pelanggan.id_pelanggan and 
+                    (invoice.tanggal between '".tgl_pecah($dari)."' and '".tgl_pecah($sampai)."' ) and 
+                    invoice.id_invoice = invoice_d.id_invoice and
+                    invoice.id_pelanggan='$pelanggan' and
+                    invoice.id_kategori='$id_kategori' and
+                    invoice.status='Selesai' and 
+                    invoice.deleted_at is null order by invoice.tanggal asc");
+                    $pen = $this->db->query("select * from pelanggan where id_pelanggan='$pelanggan' ");
+                    if($pen->num_rows() > 0){
+                        foreach($pen->result() as $p){
+                            $data["pelanggan"] = $p->nama_pelanggan;
+                        }
+                    }
+                    $data["kategori"] = $this->db->get_where('kategori', array('id' => $id_kategori))->row()->nama_kategori;
                 }
             #Menampilkan halaman#
             $this->load->view("admin/laporan/laporan-penjualan-rinci-tampil.php",$data);
