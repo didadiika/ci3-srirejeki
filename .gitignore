@@ -22,6 +22,7 @@ application/logs/*
 .DS_Store
 .env
 .vscode/
+.well-known/
 nbproject/
 Thumbs.db
 *.log
