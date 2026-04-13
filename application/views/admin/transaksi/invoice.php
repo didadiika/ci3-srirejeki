@@ -104,7 +104,8 @@ $.ajax({
     success: function(data)
     {
       console.log('Submit Berhasil !');
-      table.ajax.reload(null, false);
+      table_ketan.ajax.reload();
+      table_ir.ajax.reload();
     },
     error: function (data) {
       console.log('Submit Error !');
@@ -184,7 +185,44 @@ $('#tabel-ir').on('click','.item_selesai',function(){
 
 /*------------------------------PEMBAYARAN----------------------------*/
 
-$('#tabel').on('click','.item_bayar',function(){
+$('#tabel-ketan').on('click','.item_bayar',function(){
+            $("#form-bayar")[0].reset();
+            var id = $(this).attr('data');
+            var tgl = $(this).attr('tanggal-invoice');
+            var tot = $(this).attr('total-invoice');
+            var plg = $(this).attr('pelanggan');
+            var dibayar = $(this).attr('dibayar');
+            var sisa = $(this).attr('sisa');
+
+            $('#modal-input-bayar').modal('show');
+            $('[name="id_bayar"]').val(id);
+            $('[name="tanggal_invoice"]').val(tgl);
+            $('[name="pelanggan"]').val(plg);
+            $('[name="total_invoice"]').val(uang(tot));
+            $('[name="sudah_dibayar"]').val(uang(dibayar));
+            $('[name="sisa"]').val(uang(sisa));
+
+            if (AutoNumeric.getAutoNumericElement('[name="bayar"]') === null) {
+                  const autoNumericOptionsRp = {
+                    allowDecimalPadding        : false, 
+                    currencySymbol             : '',
+                    currencySymbolPlacement    : 'p',
+                    decimalCharacter           : ',',
+                    digitGroupSeparator        : '.',
+                    emptyInputBehavior         : 'focus',
+                    maximumValue               : sisa
+                };
+                  mata = new AutoNumeric('[name="bayar"]', autoNumericOptionsRp);
+                }
+                else
+                {
+                  
+                  AutoNumeric.set('[name="bayar"]','0');
+                  mata.update({ maximumValue : sisa });
+                }
+});
+
+$('#tabel-ir').on('click','.item_bayar',function(){
             $("#form-bayar")[0].reset();
             var id = $(this).attr('data');
             var tgl = $(this).attr('tanggal-invoice');
@@ -245,7 +283,15 @@ $("#form-bayar")[0].reset();
 $("#modal-input-bayar").modal('hide');
 });
 
-$('#tabel').on('click','.item_riwayat',function(){
+$('#tabel-ketan').on('click','.item_riwayat',function(){
+            var id = $(this).attr('data');
+
+            $("#printSection-history").load('<?php echo base_url('transaksi/invoice/riwayat-pembayaran');?>/'+id);
+            $('#modal-riwayat-bayar').modal('show');
+
+});
+
+$('#tabel-ir').on('click','.item_riwayat',function(){
             var id = $(this).attr('data');
 
             $("#printSection-history").load('<?php echo base_url('transaksi/invoice/riwayat-pembayaran');?>/'+id);
