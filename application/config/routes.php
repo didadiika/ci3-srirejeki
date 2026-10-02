@@ -81,6 +81,7 @@ $route["transaksi/invoice/tambah-barang/(:any)"] = "invoice/tambah_barang/$1";
 $route["transaksi/invoice/cetak-nota/(:any)"] = "invoice/cetak_nota/$1";
 $route["transaksi/invoice/surat-jalan/(:any)"] = "invoice/surat_jalan/$1";
 $route["transaksi/invoice/riwayat-pembayaran/(:any)"] = "invoice/riwayat_pembayaran/$1";
+$route["transaksi/invoice/biaya/(:any)"] = "invoice_cost/index/$1";
 $route["transaksi/gaji-karyawan"] = "gaji";
 $route["transaksi/gaji-karyawan/tambah-gaji/(:any)"] = "gaji/tambah_gaji/$1";
 $route["transaksi/gaji-karyawan/cetak/(:any)"] = "gaji/cetak/$1";

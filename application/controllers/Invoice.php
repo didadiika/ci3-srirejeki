@@ -84,6 +84,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Tambah Barang</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
                         </ul>
                     </div>';
@@ -105,6 +106,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_bayar"
                         tanggal-invoice="'.tgl_pecah($r->tanggal).'" pelanggan="'.$r->nama_pelanggan.'" 
                         total-invoice="'.(int)$r->total.'" dibayar="'.(int)$bayar.'" sisa="'.(int)($r->total - $bayar).'"
@@ -127,6 +129,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
                         <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
                         <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>
@@ -198,6 +201,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Tambah Barang</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
                         </ul>
                     </div>';
@@ -219,6 +223,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_bayar"
                         tanggal-invoice="'.tgl_pecah($r->tanggal).'" pelanggan="'.$r->nama_pelanggan.'" 
                         total-invoice="'.(int)$r->total.'" dibayar="'.(int)$bayar.'" sisa="'.(int)($r->total - $bayar).'"
@@ -241,6 +246,7 @@ class Invoice extends BaseController{
                     </button>
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Lihat</a></li>
+                        <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
                         <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
                         <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>

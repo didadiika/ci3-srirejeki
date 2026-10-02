@@ -346,6 +346,9 @@ $("#kbk").val(uang(parseInt(awal) * parseInt(kbk)));
           <i class="fa fa-print"></i> Cetak
           </a>
           <?php } ?>
+          <a href="<?php echo base_url('transaksi/invoice/biaya/'.$r->id_invoice);?>" class="btn btn-app">
+          <i class="fa fa-money"></i> Biaya Invoice
+          </a>
           <a href="<?php echo base_url('transaksi/invoice');?>" class="btn btn-app">
           <i class="fa fa-arrow-left"></i> Kembali
           </a>
