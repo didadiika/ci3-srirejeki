@@ -76,6 +76,9 @@ $route["transaksi/pembelian/cetak-nota/(:any)"] = "pembelian/cetak_nota/$1";
 $route["transaksi/pembelian/riwayat-pembayaran/(:any)"] = "pembelian/riwayat_pembayaran/$1";
 
 $route["transaksi/buku-keuangan"] = "bukukeuangan";
+$route["transaksi/bulog"] = "bulog";
+$route["transaksi/bulog/detail/(:any)"] = "bulog/detail/$1";
+$route["transaksi/bulog/cetak/(:any)"] = "bulog/cetak/$1";
 $route["transaksi/invoice"] = "invoice";
 $route["transaksi/invoice/tambah-barang/(:any)"] = "invoice/tambah_barang/$1";
 $route["transaksi/invoice/cetak-nota/(:any)"] = "invoice/cetak_nota/$1";
