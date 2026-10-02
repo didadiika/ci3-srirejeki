@@ -330,34 +330,150 @@ class Invoice extends BaseController{
     }
 
 
+    /**
+     * Cetak faktur sebagai PDF (stream inline ke browser).
+     * Route : transaksi/invoice/cetak-nota/{id_invoice}
+     * Opsi  : ?download=1  -> paksa unduh file
+     *         ?html=1      -> tampilkan HTML mentah (untuk cek layout)
+     */
     function cetak_nota($id){
 
-        $data["invoice"] = $this->db->query("select * from invoice, pelanggan where invoice.id_pelanggan = pelanggan.id_pelanggan and 
-        invoice.id_invoice='$id' and
-        invoice.status='Selesai' and 
-        invoice.deleted_at is null ");
-        $data["barang"] = $this->db->query("select * from invoice_d where id_invoice='$id' order by created_at asc");
-		$data["rekening"] = $this->db->query("select * from rekening, rekening_bank where selected='1' and rekening_bank.id_bank = rekening.id_bank");
+        $inv = $this->db->query("select * from invoice, pelanggan where invoice.id_pelanggan = pelanggan.id_pelanggan and
+            invoice.id_invoice = ? and
+            invoice.status = 'Selesai' and
+            invoice.deleted_at is null", array($id))->row();
 
-		#Menampilkan halaman#
-		$this->load->view("admin/transaksi/invoice-cetak-tampil.php",$data);
-        #Menampilkan halaman#
+        if (!$inv) {
+            show_error('Faktur tidak ditemukan atau belum berstatus Selesai.', 404, 'Faktur Tidak Ditemukan');
+            return;
+        }
 
+        $items = $this->db->query("select * from invoice_d where id_invoice = ? order by created_at asc", array($id))->result();
+
+        $rekening = $this->db->query("select * from rekening, rekening_bank
+            where rekening.selected = '1' and rekening_bank.id_bank = rekening.id_bank")->result();
+
+        $bayar = (int) $this->db->query("select coalesce(sum(bayar),0) as b from invoice_bayar
+            where id_invoice = ? and deleted_at is null", array($id))->row()->b;
+
+        // Total dihitung ulang dari detail agar selalu sinkron dengan baris barang
+        $total = 0;
+        foreach ($items as $m) { $total += (int) $m->sub_total; }
+
+        // Nomor faktur: pakai kolom nomor jika ada, jika tidak buat dari tanggal + potongan ID
+        $this->config->load('faktur');
+        if (!empty($inv->no_invoice)) {
+            $nomor = $inv->no_invoice;
+        } else {
+            $nomor = $this->config->item('faktur_prefix') . '-' . date('ymd', strtotime($inv->tanggal))
+                   . '-' . strtoupper(substr(str_replace('-', '', $inv->id_invoice), 0, 6));
+        }
+
+        $data = array(
+            'inv'      => $inv,
+            'items'    => $items,
+            'rekening' => $rekening,
+            'total'    => $total,
+            'bayar'    => $bayar,
+            'sisa'     => $total - $bayar,
+            'nomor'    => $nomor,
+            'toko'     => $this->config->item('faktur_toko'),
+            'judul'    => $this->config->item('faktur_judul'),
+            'ttd'      => $this->config->item('faktur_ttd'),
+            'catatan'  => $this->config->item('faktur_catatan'),
+            'petugas'  => $this->session->userdata('username'),
+        );
+
+        $html = $this->load->view('admin/transaksi/invoice-cetak-pdf.php', $data, TRUE);
+
+        if ($this->input->get('html')) {
+            echo $html;
+            return;
+        }
+
+        $nama_file = 'Faktur-' . $nomor . '-' . preg_replace('/[^A-Za-z0-9]+/', '_', $inv->nama_pelanggan) . '.pdf';
+        $this->_stream_pdf($html, $data['judul'] . ' ' . $nomor, $data['toko']['nama'], $nama_file);
     }
 
+    /**
+     * Cetak Surat Jalan sebagai PDF (stream inline ke browser).
+     * Route : transaksi/invoice/surat-jalan/{id_invoice}
+     * Tanpa harga, nominal, maupun rekening pembayaran.
+     * Opsi  : ?download=1  -> paksa unduh file
+     *         ?html=1      -> tampilkan HTML mentah (untuk cek layout)
+     */
     function surat_jalan($id){
 
-        $data["invoice"] = $this->db->query("select * from invoice, pelanggan where invoice.id_pelanggan = pelanggan.id_pelanggan and 
-        invoice.id_invoice='$id' and
-        invoice.status='Selesai' and 
-        invoice.deleted_at is null ");
-        $data["barang"] = $this->db->query("select * from invoice_d where id_invoice='$id' order by created_at asc");
-		$data["rekening"] = $this->db->query("select * from rekening order by id_rekening desc");
+        $inv = $this->db->query("select * from invoice, pelanggan where invoice.id_pelanggan = pelanggan.id_pelanggan and
+            invoice.id_invoice = ? and
+            invoice.status = 'Selesai' and
+            invoice.deleted_at is null", array($id))->row();
 
-		#Menampilkan halaman#
-		$this->load->view("admin/transaksi/invoice-surat-jalan-tampil.php",$data);
-        #Menampilkan halaman#
+        if (!$inv) {
+            show_error('Surat jalan tidak ditemukan atau transaksi belum berstatus Selesai.', 404, 'Surat Jalan Tidak Ditemukan');
+            return;
+        }
 
+        $items = $this->db->query("select * from invoice_d where id_invoice = ? order by created_at asc", array($id))->result();
+
+        $total_qty = 0;
+        foreach ($items as $m) { $total_qty += (float) $m->qty; }
+
+        $this->config->load('faktur');
+        $kode = date('ymd', strtotime($inv->tanggal)) . '-' . strtoupper(substr(str_replace('-', '', $inv->id_invoice), 0, 6));
+        $no_faktur = !empty($inv->no_invoice) ? $inv->no_invoice : $this->config->item('faktur_prefix') . '-' . $kode;
+        $nomor     = $this->config->item('sj_prefix') . '-' . $kode;
+
+        $data = array(
+            'inv'       => $inv,
+            'items'     => $items,
+            'total_qty' => $total_qty,
+            'nomor'     => $nomor,
+            'no_faktur' => $no_faktur,
+            'toko'      => $this->config->item('faktur_toko'),
+            'judul'     => $this->config->item('sj_judul'),
+            'ttd'       => $this->config->item('sj_ttd'),
+            'satuan'    => $this->config->item('sj_satuan'),
+            'petugas'   => $this->session->userdata('username'),
+        );
+
+        $html = $this->load->view('admin/transaksi/invoice-surat-jalan-pdf.php', $data, TRUE);
+
+        if ($this->input->get('html')) {
+            echo $html;
+            return;
+        }
+
+        $nama_file = 'SuratJalan-' . $nomor . '-' . preg_replace('/[^A-Za-z0-9]+/', '_', $inv->nama_pelanggan) . '.pdf';
+        $this->_stream_pdf($html, $data['judul'] . ' ' . $nomor, $data['toko']['nama'], $nama_file);
+    }
+
+    /**
+     * Render HTML -> PDF dengan Dompdf lalu stream ke browser.
+     * Diawali underscore agar tidak bisa diakses lewat URL (aturan CI3).
+     */
+    private function _stream_pdf($html, $judul, $author, $nama_file){
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('chroot', FCPATH);
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper($this->config->item('faktur_kertas'), $this->config->item('faktur_orientasi'));
+        $dompdf->addInfo('Title', $judul);
+        $dompdf->addInfo('Author', $author);
+        $dompdf->render();
+
+        // Nomor halaman (berguna jika barang banyak hingga > 1 halaman)
+        $canvas = $dompdf->getCanvas();
+        $font   = $dompdf->getFontMetrics()->getFont('Helvetica', 'normal');
+        $canvas->page_text($canvas->get_width() - 110, $canvas->get_height() - 26,
+            'Halaman {PAGE_NUM} dari {PAGE_COUNT}', $font, 7, array(0.3, 0.3, 0.3));
+
+        $dompdf->stream($nama_file, array('Attachment' => (bool) $this->input->get('download')));
+        exit;
     }
 
     function pelanggan_cari(){
