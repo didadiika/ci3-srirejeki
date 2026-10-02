@@ -69,6 +69,44 @@ class Invoice_cost_model extends CI_Model{
         return $r;
     }
 
+    /* ======================= LAPORAN ======================= */
+
+    /**
+     * Semua baris biaya dari invoice dalam rentang tanggal invoice (Y-m-d),
+     * lengkap dengan akumulasi pembayaran per biaya.
+     * $id_kategori / $id_pelanggan = '*' berarti semua.
+     */
+    function laporan($dari, $sampai, $id_kategori = '*', $id_pelanggan = '*'){
+        $sql = "select i.id_invoice, i.tanggal, i.no_polisi, i.status, i.total as total_invoice,
+                    pl.nama_pelanggan, k.nama_kategori,
+                    c.id as cost_id, c.bill_name, c.bill,
+                    coalesce(p.total_paid, 0) as total_paid,
+                    p.last_paid
+                from invoice_costs c
+                inner join invoice i    on i.id_invoice = c.invoice_id
+                inner join pelanggan pl on pl.id_pelanggan = i.id_pelanggan
+                left join kategori k    on k.id = i.id_kategori
+                left join (
+                    select invoice_cost_id, sum(paid) as total_paid, max(date_of_paid) as last_paid
+                    from invoice_cost_payments group by invoice_cost_id
+                ) p on p.invoice_cost_id = c.id
+                where i.deleted_at is null
+                  and i.tanggal between ? and ?";
+        $bind = array($dari, $sampai);
+
+        if ($id_kategori !== '*' && $id_kategori !== '') {
+            $sql .= " and i.id_kategori = ?";
+            $bind[] = $id_kategori;
+        }
+        if ($id_pelanggan !== '*' && $id_pelanggan !== '') {
+            $sql .= " and i.id_pelanggan = ?";
+            $bind[] = $id_pelanggan;
+        }
+        $sql .= " order by i.tanggal asc, i.created_at asc, c.bill_name asc";
+
+        return $this->db->query($sql, $bind)->result();
+    }
+
     /* ======================= PEMBAYARAN ======================= */
 
     function get_payments($cost_id){

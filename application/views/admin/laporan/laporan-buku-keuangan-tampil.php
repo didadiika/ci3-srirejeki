@@ -1,95 +1,95 @@
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>LAPORAN BUKU KEUANGAN</title>
-<link rel="stylesheet" href="<?php echo base_url(); ?>assets/dist/css/print.css" type="text/css" />
-
-</head>
-<style>
-@media print {
-input.noPrint { display: none; }
+<?php
+/**
+ * Laporan Buku Keuangan
+ * Variabel: $gaji (query transaksi), $saldo (saldo awal sebelum periode), $lap
+ */
+$rows       = $gaji->result();
+$saldo_awal = (float) $saldo;
+$tot_debit  = 0;
+$tot_kredit = 0;
+foreach ($rows as $p) {
+    $tot_debit  += $p->debit;
+    $tot_kredit += $p->kredit;
 }
-</style>
-<body class="body">
-<div id="wrapper">
+$saldo_akhir = $saldo_awal + $tot_debit - $tot_kredit;
+$selisih     = $tot_debit - $tot_kredit;
 
-<table width="100%">
-<tr>
-  <td width="10%" rowspan="3"></td>
-  <td width="90%"><div class="kop1"><h2>MACTEL SRI REJEKI</h2></div></td>
-</tr>
-<tr>
-  <td></td>
-</tr>
-</table>
+$this->load->view('admin/laporan/_laporan-head.php', array(
+    'judul' => 'LAPORAN BUKU KEUANGAN',
+    'info'  => array(
+        'Periode' => '<strong>' . $lap['dari'] . ' s/d ' . $lap['sampai'] . '</strong>',
+    ),
+));
+?>
 
-  <h2 class="head" style="font-size:24px;">LAPORAN BUKU KEUANGAN</h2>
-  
-  <table class="tabel" id="myTable">
-  <thead>
-  <tr>
-  <td width="50%" style="font-size:20px;">Periode:</td>
-  <td width="50%" style="font-size:20px;"><?php echo $lap["dari"]." sampai ".$lap["sampai"];?></td>
-  </tr>
-  </thead>
+  <div class="ringkasan">
+    <div class="kotak k-abu">
+      <div class="lbl">Saldo Awal</div>
+      <div class="val"><?php echo rp_lap($saldo_awal); ?></div>
+      <div class="sub">Sebelum <?php echo $lap['dari']; ?></div>
+    </div>
+    <div class="kotak k-hijau">
+      <div class="lbl">Total Debit (Masuk)</div>
+      <div class="val"><?php echo rp_lap($tot_debit); ?></div>
+      <div class="sub"><?php $n = 0; foreach ($rows as $p) if ($p->debit > 0) $n++; echo $n; ?> transaksi</div>
+    </div>
+    <div class="kotak k-merah">
+      <div class="lbl">Total Kredit (Keluar)</div>
+      <div class="val"><?php echo rp_lap($tot_kredit); ?></div>
+      <div class="sub"><?php $n = 0; foreach ($rows as $p) if ($p->kredit > 0) $n++; echo $n; ?> transaksi</div>
+    </div>
+    <div class="kotak k-biru">
+      <div class="lbl">Saldo Akhir</div>
+      <div class="val"><?php echo rp_lap($saldo_akhir); ?></div>
+      <div class="sub"><?php echo ($selisih >= 0 ? 'Naik ' : 'Turun ') . rp_lap(abs($selisih)); ?> di periode ini</div>
+    </div>
+  </div>
+
+  <h3 class="sub-judul">Rincian Transaksi</h3>
+  <div class="scroll-x">
+  <table class="data">
+    <thead>
+      <tr>
+        <th style="width:35px">No</th>
+        <th>Tanggal</th>
+        <th>Keterangan</th>
+        <th>Jenis</th>
+        <th>Debit</th>
+        <th>Kredit</th>
+        <th>Saldo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="saldo">
+        <td></td>
+        <td colspan="5">Saldo Awal</td>
+        <td class="r"><?php echo rp_lap($saldo_awal); ?></td>
+      </tr>
+    <?php if (count($rows) == 0) { ?>
+      <tr><td colspan="7" class="c" style="padding:20px;color:#777">Tidak ada transaksi pada periode ini.</td></tr>
+    <?php } ?>
+    <?php $no = 0; $berjalan = $saldo_awal; foreach ($rows as $p) { $no++;
+      $berjalan = $berjalan + $p->debit - $p->kredit; ?>
+      <tr>
+        <td class="c"><?php echo $no; ?></td>
+        <td class="nw"><?php echo tgl_indo($p->tanggal); ?></td>
+        <td><?php echo html_escape($p->keterangan); ?></td>
+        <td class="c nw"><?php echo html_escape($p->jenis); ?></td>
+        <td class="r <?php echo $p->debit > 0 ? 'masuk' : 'redup'; ?>"><?php echo $p->debit > 0 ? rp_lap($p->debit) : '-'; ?></td>
+        <td class="r <?php echo $p->kredit > 0 ? 'keluar' : 'redup'; ?>"><?php echo $p->kredit > 0 ? rp_lap($p->kredit) : '-'; ?></td>
+        <td class="r <?php echo $berjalan < 0 ? 'keluar' : ''; ?>"><?php echo rp_lap($berjalan); ?></td>
+      </tr>
+    <?php } ?>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="4" style="text-align:left">TOTAL</th>
+        <th class="r masuk"><?php echo rp_lap($tot_debit); ?></th>
+        <th class="r keluar"><?php echo rp_lap($tot_kredit); ?></th>
+        <th class="r"><?php echo rp_lap($saldo_akhir); ?></th>
+      </tr>
+    </tfoot>
   </table>
+  </div>
 
- 
-  <table class="tabel" id="myTable" >
-  <thead>
-  <tr>
-  <td style="font-size:20px;">No</td>
-  <td style="font-size:20px;">Tanggal</td>
-  <td style="font-size:20px;">Keterangan</td>
-  <td style="font-size:20px;">Debit</td>
-  <td style="font-size:20px;">Kredit</td>
-  <td style="font-size:20px;">Saldo</td>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-  <td colspan="5" style="font-size:20px;"><strong>Saldo Awal<strong></td>
-  <td align="right" style="font-size:20px;"><strong><?php echo uang($saldo);?></strong></td>    
-  </tr>
-    <?php
-    if($gaji->num_rows() > 0){
-    $no = 0;  
-    foreach ($gaji->result() as $p) {
-    $no++;  
-    ?>
-  <tr>
-  <td style="font-size:20px;"><?php echo $no;?></td>
-  <td style="font-size:20px;"><?php echo tgl_indo($p->tanggal);?></td>
-  <td style="font-size:20px;"><?php echo $p->keterangan;?></td>
-  <td align="right" style="font-size:20px;"><?php echo uang($p->debit);?></td>
-  <td align="right" style="font-size:20px;"><?php echo uang($p->kredit);?></td>
-  <td align="right" style="font-size:20px;"><?php echo uang($saldo = $saldo + $p->debit - $p->kredit);?></td>
-  </tr>
-  <?php 
-  $deb[] = $p->debit;
-  $kre[] = $p->kredit;
-  } ?>
-  <tr>
-    <td colspan="3" style="font-size:20px;"><strong>Total</strong></td>
-    <td align="right" style="font-size:20px;"><strong><?php echo uang(array_sum($deb));?></strong></td>
-    <td align="right" style="font-size:20px;"><strong><?php echo uang(array_sum($kre));?></strong></td>
-    <td align="right" style="font-size:20px;"><strong><?php echo uang($saldo);?></strong></td>
-  </tr>
-  <?php } else{ ?>
-    <tr>
-  <td colspan="6" align="center" style="font-size:20px;"><strong>Tidak Ada Transaksi</strong></td>
-  </tr>
-  <?php
-  } ?>
-  </tbody>
-</table>
-
-<br>
-<div align="center">
-<input type="button" onclick="window.print()" class="noPrint" value="Cetak Halaman">
-<input type="button" onclick="window.close()" class="noPrint" value="Tutup">
-</div>
-
-</div>
-</body>
-</html>
+<?php $this->load->view('admin/laporan/_laporan-foot.php'); ?>

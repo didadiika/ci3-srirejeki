@@ -442,6 +442,145 @@ class Laporan extends BaseController{
 	}
 
 
+    /* =====================================================================
+     *  LAPORAN BIAYA INVOICE
+     *  Route : laporan/laporan-biaya-invoice        (form filter)
+     *          laporan/laporan-biaya-invoice-tampil (hasil, tab baru / siap cetak)
+     * ===================================================================== */
+    function laporan_biaya_invoice(){
+        $level = $this->session->level;
+        if($level == "Programmer")
+        {
+            $this->load->view("programmer/template/header.php");
+            $this->load->view("programmer/template/menu.php");
+        } else if($level == "Owner"){
+            $this->load->view("owner/template/header.php");
+            $this->load->view("owner/template/menu.php");
+        } else {
+            $this->load->view("admin/template/header.php");
+            $this->load->view("admin/template/menu.php");
+        }
+        $data['kategori']  = $this->db->get('kategori')->result();
+        $data['pelanggan'] = $this->db->query("select * from pelanggan where deleted_at is null order by nama_pelanggan asc");
+        $this->load->view("admin/laporan/laporan-biaya-invoice.php", $data);
+        $this->load->view("admin/template/footer.php");
+    }
+
+    function laporan_biaya_invoice_tampil(){
+        $id_kategori  = (string) $this->input->post("id_kategori");
+        $id_pelanggan = (string) $this->input->post("id_pelanggan");
+        $jenis        = $this->input->post("jenis") === "Rinci" ? "Rinci" : "Ringkas";
+        $status       = in_array($this->input->post("status"), array("Lunas", "Belum Lunas")) ? $this->input->post("status") : "Semua";
+        $dari         = $this->_tgl_valid($this->input->post("dari"));
+        $sampai       = $this->_tgl_valid($this->input->post("sampai"));
+
+        if (!$dari || !$sampai) {
+            show_error('Tanggal tidak valid. Gunakan format dd-mm-yyyy.', 400, 'Tanggal Tidak Valid');
+            return;
+        }
+        if ($dari > $sampai) { $tmp = $dari; $dari = $sampai; $sampai = $tmp; }   // tukar jika terbalik
+
+        $this->load->model("invoice_cost_model");
+        $rows = $this->invoice_cost_model->laporan($dari, $sampai, $id_kategori === '' ? '*' : $id_kategori, $id_pelanggan === '' ? '*' : $id_pelanggan);
+
+        // Kelompokkan baris biaya per invoice
+        $invoices = array();
+        foreach ($rows as $r) {
+            $id = $r->id_invoice;
+            if (!isset($invoices[$id])) {
+                $invoices[$id] = array(
+                    'id_invoice'     => $id,
+                    'tanggal'        => $r->tanggal,
+                    'nama_pelanggan' => $r->nama_pelanggan,
+                    'no_polisi'      => $r->no_polisi,
+                    'nama_kategori'  => $r->nama_kategori,
+                    'status'         => $r->status,
+                    'total_bill'     => 0,
+                    'total_paid'     => 0,
+                    'biaya'          => array(),
+                );
+            }
+            $bill = (float) $r->bill;
+            $paid = (float) $r->total_paid;
+            $invoices[$id]['total_bill'] += $bill;
+            $invoices[$id]['total_paid'] += $paid;
+            $invoices[$id]['biaya'][] = array(
+                'bill_name' => $r->bill_name,
+                'bill'      => $bill,
+                'paid'      => $paid,
+                'sisa'      => $bill - $paid,
+                'last_paid' => $r->last_paid,
+            );
+        }
+
+        // Filter status pembayaran (level invoice: lunas jika seluruh biayanya terbayar)
+        $grand = array('invoice' => 0, 'biaya' => 0, 'bill' => 0, 'paid' => 0, 'sisa' => 0, 'inv_lunas' => 0, 'inv_belum' => 0);
+        foreach ($invoices as $id => $inv) {
+            $sisa  = round($inv['total_bill'] - $inv['total_paid'], 2);
+            $lunas = $sisa <= 0;
+            if (($status == "Lunas" && !$lunas) || ($status == "Belum Lunas" && $lunas)) {
+                unset($invoices[$id]);
+                continue;
+            }
+            $invoices[$id]['sisa']  = $sisa;
+            $invoices[$id]['lunas'] = $lunas;
+
+            $grand['invoice']++;
+            $grand['biaya'] += count($inv['biaya']);
+            $grand['bill']  += $inv['total_bill'];
+            $grand['paid']  += $inv['total_paid'];
+            $grand['sisa']  += $sisa;
+            $lunas ? $grand['inv_lunas']++ : $grand['inv_belum']++;
+        }
+
+        // Rekap per nama biaya (mis. total "Biaya Pengolahan" di periode ini)
+        $per_nama = array();
+        foreach ($invoices as $inv) {
+            foreach ($inv['biaya'] as $b) {
+                $key = mb_strtolower(trim($b['bill_name']));
+                if (!isset($per_nama[$key])) {
+                    $per_nama[$key] = array('bill_name' => trim($b['bill_name']), 'jumlah' => 0, 'bill' => 0, 'paid' => 0, 'sisa' => 0);
+                }
+                $per_nama[$key]['jumlah']++;
+                $per_nama[$key]['bill'] += $b['bill'];
+                $per_nama[$key]['paid'] += $b['paid'];
+                $per_nama[$key]['sisa'] += $b['sisa'];
+            }
+        }
+        uasort($per_nama, function ($a, $b) { return $b['bill'] <=> $a['bill']; });
+
+        // Label filter untuk kop laporan
+        $label_kategori = "Semua Kategori";
+        if ($id_kategori !== '*' && $id_kategori !== '') {
+            $k = $this->db->get_where('kategori', array('id' => $id_kategori))->row();
+            if ($k) $label_kategori = $k->nama_kategori;
+        }
+        $label_pelanggan = "Semua Pelanggan";
+        if ($id_pelanggan !== '*' && $id_pelanggan !== '') {
+            $p = $this->db->get_where('pelanggan', array('id_pelanggan' => $id_pelanggan))->row();
+            if ($p) $label_pelanggan = $p->nama_pelanggan;
+        }
+
+        $data = array(
+            'invoices'  => $invoices,
+            'grand'     => $grand,
+            'per_nama'  => $per_nama,
+            'jenis'     => $jenis,
+            'status'    => $status,
+            'periode'   => tgl_indo($dari) . " s/d " . tgl_indo($sampai),
+            'kategori'  => $label_kategori,
+            'pelanggan' => $label_pelanggan,
+        );
+        $this->load->view("admin/laporan/laporan-biaya-invoice-tampil.php", $data);
+    }
+
+    /** "01-10-2026" -> "2026-10-01" ; FALSE jika tidak valid */
+    private function _tgl_valid($tgl){
+        $tgl = trim((string) $tgl);
+        $d = DateTime::createFromFormat('!d-m-Y', $tgl);
+        return ($d && $d->format('d-m-Y') === $tgl) ? $d->format('Y-m-d') : FALSE;
+    }
+
     function get_pengirim(){
         echo"<label for='ProductCode'>Pilih Pengirim</label>";
         echo"<select class='js-example-basic-multiple  form-control' name='pengirim[]' multiple='multiple' required>";

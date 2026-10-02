@@ -94,6 +94,8 @@ $route["laporan/laporan-piutang"] = "laporan/laporan_piutang";
 $route["laporan/laporan-piutang-tampil"] = "laporan/laporan_piutang_tampil";
 $route["laporan/laporan-buku-keuangan"] = "laporan/laporan_buku_keuangan";
 $route["laporan/laporan-buku-keuangan-tampil"] = "laporan/laporan_buku_keuangan_tampil";
+$route["laporan/laporan-biaya-invoice"] = "laporan/laporan_biaya_invoice";
+$route["laporan/laporan-biaya-invoice-tampil"] = "laporan/laporan_biaya_invoice_tampil";
 
 $route["akun/ganti-password"] = "akun/ganti_password";
 $route["akun/tentang-software"] = "akun/tentang_software";
