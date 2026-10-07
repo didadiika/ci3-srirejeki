@@ -53,7 +53,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <th style="width:35px">No</th>
         <th>Tanggal</th>
         <th>Keterangan</th>
-        <th>Jenis</th>
         <th>Debit</th>
         <th>Kredit</th>
         <th>Saldo</th>
@@ -62,11 +61,11 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
     <tbody>
       <tr class="saldo">
         <td></td>
-        <td colspan="5">Saldo Awal</td>
+        <td colspan="4">Saldo Awal</td>
         <td class="r"><?php echo rp_lap($saldo_awal); ?></td>
       </tr>
     <?php if (count($rows) == 0) { ?>
-      <tr><td colspan="7" class="c" style="padding:20px;color:#777">Tidak ada transaksi pada periode ini.</td></tr>
+      <tr><td colspan="6" class="c" style="padding:20px;color:#777">Tidak ada transaksi pada periode ini.</td></tr>
     <?php } ?>
     <?php $no = 0; $berjalan = $saldo_awal; foreach ($rows as $p) { $no++;
       $berjalan = $berjalan + $p->debit - $p->kredit; ?>
@@ -74,7 +73,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <td class="c"><?php echo $no; ?></td>
         <td class="nw"><?php echo tgl_indo($p->tanggal); ?></td>
         <td><?php echo html_escape($p->keterangan); ?></td>
-        <td class="c nw"><?php echo html_escape($p->jenis); ?></td>
         <td class="r <?php echo $p->debit > 0 ? 'masuk' : 'redup'; ?>"><?php echo $p->debit > 0 ? rp_lap($p->debit) : '-'; ?></td>
         <td class="r <?php echo $p->kredit > 0 ? 'keluar' : 'redup'; ?>"><?php echo $p->kredit > 0 ? rp_lap($p->kredit) : '-'; ?></td>
         <td class="r <?php echo $berjalan < 0 ? 'keluar' : ''; ?>"><?php echo rp_lap($berjalan); ?></td>
@@ -83,7 +81,7 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
     </tbody>
     <tfoot>
       <tr>
-        <th colspan="4" style="text-align:left">TOTAL</th>
+        <th colspan="3" style="text-align:left">TOTAL</th>
         <th class="r masuk"><?php echo rp_lap($tot_debit); ?></th>
         <th class="r keluar"><?php echo rp_lap($tot_kredit); ?></th>
         <th class="r"><?php echo rp_lap($saldo_akhir); ?></th>
