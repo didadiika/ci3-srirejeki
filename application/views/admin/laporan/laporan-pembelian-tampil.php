@@ -25,24 +25,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
 ));
 ?>
 
-  <div class="ringkasan">
-    <div class="kotak k-biru">
-      <div class="lbl">Total Pembelian</div>
-      <div class="val"><?php echo rp_lap($tot_beli); ?></div>
-      <div class="sub"><?php echo count($rows); ?> transaksi &middot; <?php echo rp_lap($tot_tonase); ?> kg</div>
-    </div>
-    <div class="kotak k-hijau">
-      <div class="lbl">Sudah Bayar (DP)</div>
-      <div class="val"><?php echo rp_lap($paid); ?></div>
-      <div class="sub"><?php echo persen_lap($paid, $tot_beli); ?> dari total pembelian</div>
-    </div>
-    <div class="kotak k-merah">
-      <div class="lbl">Utang</div>
-      <div class="val"><?php echo rp_lap($utang); ?></div>
-      <div class="sub">Sisa yang belum dibayar</div>
-    </div>
-  </div>
-
 <?php if (count($rows) == 0) { ?>
 
   <div class="kosong"><h3>Transaksi tidak ditemukan.</h3></div>
