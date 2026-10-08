@@ -76,7 +76,22 @@ if (!function_exists('persen_lap')) {
     .badge { color: #000; border: 1px solid #666; background: none !important; }
     tr { page-break-inside: avoid; }
     thead { display: table-header-group; }
-    @page { size: A4 landscape; margin: 12mm; }
+    @page { size: A4 portrait; margin: 10mm; }
+
+    /* Kertas portrait lebih sempit: rapatkan ukuran agar tabel lebar tetap muat */
+    .kop h2 { font-size: 18px; }
+    h1.judul { font-size: 16px; margin: 4px 0 10px; }
+    .info td { font-size: 12px; padding: 2px 0; }
+    .info td.l { width: 120px; }
+    .ringkasan { gap: 6px; margin: 10px 0 12px; }
+    .ringkasan .kotak { padding: 6px 8px; }
+    .ringkasan .kotak .lbl { font-size: 10px; }
+    .ringkasan .kotak .val { font-size: 14px; }
+    .ringkasan .kotak .sub { font-size: 10px; }
+    h3.sub-judul { font-size: 13px; margin: 12px 0 4px; }
+    table.data th, table.data td { font-size: 10.5px; padding: 3px 4px; }
+    .badge { font-size: 9px; padding: 0 4px; }
+    .dicetak { font-size: 9px; }
   }
 </style>
 </head>
