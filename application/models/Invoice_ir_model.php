@@ -3,7 +3,8 @@ class Invoice_ir_model extends CI_Model{
     var $tabel = "invoice";
     var $where = "invoice.deleted_at is NULL";
 	var $pilih_kolom = "*";
-	var $order_kolom = array(NULL,"invoice.tanggal","pelanggan.nama_pelanggan","invoice.harga_kbk","invoice.total","invoice.status","invoice.status_bayar", NULL, NULL);
+	// Urutan sesuai kolom tabel: No, Tanggal, Pelanggan, No Truk, Retur, Total, Status, Pembayaran, Piutang, Aksi
+	var $order_kolom = array(NULL,"invoice.tanggal","pelanggan.nama_pelanggan","invoice.no_polisi","invoice.tonase_return","invoice.total","invoice.status","invoice.status_bayar", NULL, NULL);
 	    
     function tampil_data(){
       
@@ -19,7 +20,8 @@ class Invoice_ir_model extends CI_Model{
 		{
 			$this->db->group_start();
 			$this->db->like("pelanggan.nama_pelanggan", $_GET["search"]["value"]);
-            $this->db->or_like("invoice.harga_kbk", $_GET["search"]["value"]);
+            $this->db->or_like("invoice.no_polisi", $_GET["search"]["value"]);
+            $this->db->or_like("invoice.tonase_return", $_GET["search"]["value"]);
             $this->db->or_like("invoice.tanggal", substr($_GET["search"]["value"],6,4)."-".substr($_GET["search"]["value"],3,2)."-".substr($_GET["search"]["value"],0,2));
             $this->db->or_like("invoice.total", $_GET["search"]["value"]);
             $this->db->or_like("invoice.status", $_GET["search"]["value"]);

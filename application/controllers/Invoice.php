@@ -181,8 +181,26 @@ class Invoice extends BaseController{
             $sub_array[] = tgl_pecah($r->tanggal);
             $sub_array[] = $r->nama_pelanggan;
             $sub_array[] = $r->no_polisi;
-            $sub_array[] = uang($r->harga_kbk);
+            /* Kolom Retur (menggantikan KBK Angkut khusus tab IR) */
+            $sub_array[] = ((int)$r->tonase_return > 0)
+                ? '<span class="text-red"><strong>'.uang($r->tonase_return).'</strong></span>'
+                : '<span class="text-muted">-</span>';
             $sub_array[] = uang($r->total);
+
+            /* Menu Retur: Tambah jika belum ada, Edit + Hapus jika sudah ada */
+            $attr_retur = 'data="'.$r->id_invoice.'" tanggal-invoice="'.tgl_pecah($r->tanggal).'"
+                        pelanggan="'.htmlspecialchars((string)$r->nama_pelanggan, ENT_QUOTES).'" no-truk="'.htmlspecialchars((string)$r->no_polisi, ENT_QUOTES).'"
+                        total-tonase="'.(float)$r->total_tonase.'" tonase-return="'.(int)$r->tonase_return.'"';
+            if((int)$r->tonase_return > 0){
+                $menu_retur = '<li class="divider"></li>
+                        <li><a href="javascript:void(0)" class="item_retur" '.$attr_retur.'>Edit Retur</a></li>
+                        <li><a href="javascript:void(0)" class="item_hapus_retur" '.$attr_retur.'>Hapus Retur</a></li>
+                        <li class="divider"></li>';
+            } else {
+                $menu_retur = '<li class="divider"></li>
+                        <li><a href="javascript:void(0)" class="item_retur" '.$attr_retur.'>Tambah Retur</a></li>
+                        <li class="divider"></li>';
+            }
             
             if($r->status == "Proses")
             {
@@ -202,6 +220,7 @@ class Invoice extends BaseController{
                         <ul class="dropdown-menu" role="menu">
                         <li><a href="'.base_url('transaksi/invoice/tambah-barang/'.$r->id_invoice).'">Tambah Barang</a></li>
                         <li><a href="'.base_url('transaksi/invoice/biaya/'.$r->id_invoice).'">Biaya Invoice</a></li>
+                        '.$menu_retur.'
                         <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
                         </ul>
                     </div>';
@@ -231,6 +250,7 @@ class Invoice extends BaseController{
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
                         <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
                         <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>
+                        '.$menu_retur.'
                         <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
                         </ul>
                     </div>';
@@ -250,6 +270,7 @@ class Invoice extends BaseController{
                         <li><a href="javascript:void(0)" data="'.$r->id_invoice.'" class="item_riwayat">Riwayat Pembayaran</a></li>
                         <li><a href="'.base_url('transaksi/invoice/cetak-nota/'.$r->id_invoice).'" target="_blank">Cetak</a></li>
                         <li><a href="'.base_url('transaksi/invoice/surat-jalan/'.$r->id_invoice).'" target="_blank">Surat Jalan</a></li>
+                        '.$menu_retur.'
                         <li><a href="javascript:;" class="item_hapus" data="'.$r->id_invoice.'" >Hapus</a></li>
                         </ul>
                     </div>';
@@ -768,6 +789,71 @@ class Invoice extends BaseController{
         }
         #-----Kontrol Pelunasan-----#
     }
+
+    /* ============================== RETUR (khusus IR) ============================== */
+
+    private function _json_retur($status, $message, $code = 200){
+        $this->output
+            ->set_status_header($code)
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array('status' => $status, 'message' => $message)));
+    }
+
+    /** Ambil invoice IR yang masih aktif, NULL jika tidak ada / bukan IR */
+    private function _invoice_ir($id_invoice){
+        return $this->db->query("select invoice.* from invoice
+            inner join kategori on kategori.id = invoice.id_kategori
+            where invoice.id_invoice = ? and kategori.nama_kategori = 'IR' and invoice.deleted_at is null",
+            array($id_invoice))->row();
+    }
+
+    /**
+     * Tambah / Edit retur (keduanya sama: menyimpan nilai tonase_return).
+     * POST : id_invoice, tonase_return
+     */
+    function simpan_retur(){
+        $id_invoice    = $this->input->post('id_invoice');
+        $tonase_return = (int) uangPecah($this->input->post('tonase_return'));
+
+        $inv = $this->_invoice_ir($id_invoice);
+        if(!$inv){
+            return $this->_json_retur(false, 'Invoice IR tidak ditemukan.', 404);
+        }
+        if($tonase_return <= 0){
+            return $this->_json_retur(false, 'Tonase retur harus lebih dari 0.');
+        }
+        if($tonase_return > (float) $inv->total_tonase){
+            return $this->_json_retur(false, 'Tonase retur tidak boleh melebihi total tonase invoice ('.uang($inv->total_tonase).').');
+        }
+
+        $this->load->model("invoice_model");
+        $this->invoice_model->update_data("invoice",
+            array("tonase_return" => $tonase_return, "updated_at" => date("Y-m-d H:i:s")),
+            array("id_invoice" => $id_invoice));
+
+        return $this->_json_retur(true, 'Retur berhasil disimpan.');
+    }
+
+    /**
+     * Hapus retur -> tonase_return dikembalikan ke 0.
+     * POST : id_invoice
+     */
+    function hapus_retur(){
+        $id_invoice = $this->input->post('id_invoice');
+
+        if(!$this->_invoice_ir($id_invoice)){
+            return $this->_json_retur(false, 'Invoice IR tidak ditemukan.', 404);
+        }
+
+        $this->load->model("invoice_model");
+        $this->invoice_model->update_data("invoice",
+            array("tonase_return" => 0, "updated_at" => date("Y-m-d H:i:s")),
+            array("id_invoice" => $id_invoice));
+
+        return $this->_json_retur(true, 'Retur berhasil dihapus.');
+    }
+
+    /* ============================ END RETUR ============================ */
 
 	function riwayat_pembayaran($id)
     {

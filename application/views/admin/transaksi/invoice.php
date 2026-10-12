@@ -302,6 +302,108 @@ $('#tabel-ir').on('click','.item_riwayat',function(){
 
 /*------------------------------PEMBAYARAN----------------------------*/
 
+
+/*------------------------------RETUR (IR)----------------------------*/
+var anRetur = null;
+
+// Tambah / Edit Retur
+$('#tabel-ir').on('click','.item_retur',function(){
+            var el = $(this);
+            var total_tonase = parseFloat(el.attr('total-tonase')) || 0;
+            var tonase_return = parseInt(el.attr('tonase-return')) || 0;
+
+            $('#form-retur')[0].reset();
+            $('#retur-error').hide().html('');
+            $('#judul-retur').text(tonase_return > 0 ? 'Edit Retur' : 'Tambah Retur');
+            $('#retur_id_invoice').val(el.attr('data'));
+            $('#retur_tanggal').val(el.attr('tanggal-invoice'));
+            $('#retur_pelanggan').val(el.attr('pelanggan'));
+            $('#retur_no_truk').val(el.attr('no-truk'));
+            $('#retur_total_tonase').val(uang(Math.floor(total_tonase)));
+
+            var opsiRetur = {
+                allowDecimalPadding     : false,
+                decimalPlaces           : 0,
+                currencySymbol          : '',
+                decimalCharacter        : ',',
+                digitGroupSeparator     : '.',
+                emptyInputBehavior      : 'focus',
+                minimumValue            : '0',
+                maximumValue            : String(Math.floor(total_tonase))
+            };
+            if (anRetur === null) {
+                anRetur = new AutoNumeric('#retur_tonase', opsiRetur);
+            } else {
+                anRetur.update(opsiRetur);
+            }
+            if (tonase_return > 0) { anRetur.set(tonase_return); } else { anRetur.clear(); }
+
+            $('#modal-retur').modal('show');
+});
+
+$('#form-retur').submit(function(e){
+    e.preventDefault();
+    var form = $(this);
+    var tonase = anRetur ? anRetur.getNumber() : 0;
+    if (!tonase || tonase <= 0) {
+        $('#retur-error').html('Tonase retur harus lebih dari 0.').show();
+        return false;
+    }
+    $('#btn_simpan_retur').prop('disabled', true);
+    $.ajax({
+        type: form.attr('method'),
+        url: form.attr('action'),
+        data: { id_invoice: $('#retur_id_invoice').val(), tonase_return: tonase },
+        dataType: 'json',
+        success: function(res){
+            if (res.status) {
+                $('#modal-retur').modal('hide');
+                table_ir.ajax.reload(null, false);
+            } else {
+                $('#retur-error').html(res.message).show();
+            }
+        },
+        error: function(xhr){
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menyimpan retur.';
+            $('#retur-error').html(msg).show();
+        },
+        complete: function(){
+            $('#btn_simpan_retur').prop('disabled', false);
+        }
+    });
+});
+
+// Hapus Retur
+$('#tabel-ir').on('click','.item_hapus_retur',function(){
+            var el = $(this);
+            $('#hapus_retur_id').val(el.attr('data'));
+            $('#hapus_retur_tonase').text(uang(el.attr('tonase-return')));
+            $('#hapus_retur_info').text(el.attr('tanggal-invoice') + ' - ' + el.attr('no-truk'));
+            $('#ModalHapusRetur').modal('show');
+});
+
+$('#btn_hapus_retur').on('click',function(){
+    $('#btn_hapus_retur').prop('disabled', true);
+    $.ajax({
+        type: 'POST',
+        url: '<?php echo base_url('invoice/hapus_retur');?>',
+        data: { id_invoice: $('#hapus_retur_id').val() },
+        dataType: 'json',
+        success: function(res){
+            $('#ModalHapusRetur').modal('hide');
+            if (!res.status) { alert(res.message); }
+            table_ir.ajax.reload(null, false);
+        },
+        error: function(){
+            alert('Gagal menghapus retur.');
+        },
+        complete: function(){
+            $('#btn_hapus_retur').prop('disabled', false);
+        }
+    });
+});
+/*------------------------------RETUR (IR)----------------------------*/
+
 });
 
 
@@ -525,7 +627,7 @@ $('#tabel-ir').on('click','.item_riwayat',function(){
                   <th>Tanggal</th>
                   <th>Pelanggan</th>
                   <th>No Truk</th>
-                  <th>KBK Angkut</th>
+                  <th><?php echo (strtoupper($k->nama_kategori) == 'IR') ? 'Retur' : 'KBK Angkut'; ?></th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Pembayaran</th>
@@ -594,6 +696,89 @@ $('#tabel-ir').on('click','.item_riwayat',function(){
   </div>
 </div>
 <!--END MODAL SELESAI-->
+
+
+<!----------------------------------MODAL RETUR (IR)------------------------------------------------------->
+<div class="modal fade" id="modal-retur">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span></button>
+<h4 class="modal-title" id="judul-retur">Tambah Retur</h4>
+</div>
+<form action="<?php echo base_url('invoice/simpan_retur') ;?>" method="post" id="form-retur" autocomplete="off">
+<div class="modal-body">
+
+      <input type="hidden" name="id_invoice" id="retur_id_invoice">
+
+      <div class="alert alert-danger" id="retur-error" style="display:none;"></div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="control-label">Tanggal Invoice</label>
+            <input type="text" id="retur_tanggal" class="form-control" readonly>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="control-label">Pelanggan</label>
+            <input type="text" id="retur_pelanggan" class="form-control" readonly>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="control-label">No Truk</label>
+            <input type="text" id="retur_no_truk" class="form-control" readonly>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="control-label">Total Tonase</label>
+            <input type="text" id="retur_total_tonase" class="form-control" readonly>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+          <label class="control-label">Tonase Retur</label>
+          <input type="text" name="tonase_return" id="retur_tonase" class="form-control" placeholder="Jumlah tonase yang diretur" required>
+          <span class="help-block">Maksimal sebesar Total Tonase invoice.</span>
+      </div>
+
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> Batal</button>
+<button type="submit" class="btn btn-primary" id="btn_simpan_retur"><i class="fa fa-save"></i> Simpan</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!----------------------------------MODAL RETUR (IR)------------------------------------------------------->
+
+
+<!--MODAL HAPUS RETUR-->
+<div class="modal modal-danger fade" id="ModalHapusRetur" tabindex="-1" role="dialog">
+<div class="modal-dialog" role="document">
+  <div class="modal-content">
+      <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
+          <h4 class="modal-title">Konfirmasi Hapus Retur</h4>
+      </div>
+      <div class="modal-body">
+          <input type="hidden" id="hapus_retur_id" value="">
+          <div class="alert alert-default"><p>Hapus retur <strong id="hapus_retur_tonase"></strong> pada invoice <strong id="hapus_retur_info"></strong> ?</p></div>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+          <button type="button" class="btn btn-danger" id="btn_hapus_retur">Hapus</button>
+      </div>
+  </div>
+</div>
+</div>
+<!--END MODAL HAPUS RETUR-->
 
 </div>
 </section>
