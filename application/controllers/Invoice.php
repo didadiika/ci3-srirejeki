@@ -23,7 +23,7 @@ class Invoice extends BaseController{
 
 		#Menampilkan halaman suplier dan mem passing variabel data#
         $level = $this->session->level;
-        $data['kategori'] = $this->db->get('kategori')->result();
+        $data['kategori'] = $this->db->order_by('id', 'ASC')->get('kategori')->result(); #Urutan tab: Ketan, IR, Katul
         if($level == "Programmer")
         {
             $this->load->view("programmer/template/header.php");
@@ -41,10 +41,24 @@ class Invoice extends BaseController{
         #Menampilkan halaman suplier dan mem passing variabel data#
     }
     
+    /* Datatables tab Ketan */
     function tampil(){
-		#Mengambil data kain secara serverside#
-		$this->load->model("invoice_model");
-		$d = $this->invoice_model->make_datatables();
+		$this->_tampil_standar("invoice_model");
+	}
+
+    /* Datatables tab Katul (sama persis dengan Ketan) */
+    function tampil_katul(){
+		$this->_tampil_standar("Invoice_katul_model");
+	}
+
+    /**
+     * Isi datatables untuk kategori standar (Ketan, Katul).
+     * Kolom & menu aksi identik; hanya model (filter kategori) yang berbeda.
+     */
+    private function _tampil_standar($model){
+		#Mengambil data secara serverside#
+		$this->load->model($model, "dt_model");
+		$d = $this->dt_model->make_datatables();
 		$data = array();
 		$start = isset($_GET["start"]) ? $_GET["start"] : 0;
 		$no = $start + 1;
@@ -149,8 +163,8 @@ class Invoice extends BaseController{
 
 			$output = array(
 				"draw" 				=> intval($draw),
-				"recordsTotal" 		=> $this->invoice_model->get_all_data(),
-				"recordsFiltered" 	=> $this->invoice_model->get_filtered_data(),
+				"recordsTotal" 		=> $this->dt_model->get_all_data(),
+				"recordsFiltered" 	=> $this->dt_model->get_filtered_data(),
 				"data"				=> $data
 		
 		);
@@ -181,11 +195,12 @@ class Invoice extends BaseController{
             $sub_array[] = tgl_pecah($r->tanggal);
             $sub_array[] = $r->nama_pelanggan;
             $sub_array[] = $r->no_polisi;
-            /* Kolom Retur (menggantikan KBK Angkut khusus tab IR) */
+            /* Kolom khusus tab IR: Tonase, Retur, Tonase Akhir (= Tonase - Retur) */
+            $sub_array[] = uang($r->total_tonase);
             $sub_array[] = ((int)$r->tonase_return > 0)
                 ? '<span class="text-red"><strong>'.uang($r->tonase_return).'</strong></span>'
                 : '<span class="text-muted">-</span>';
-            $sub_array[] = uang($r->total);
+            $sub_array[] = '<strong>'.uang((float)$r->total_tonase - (int)$r->tonase_return).'</strong>';
 
             /* Menu Retur: Tambah jika belum ada, Edit + Hapus jika sudah ada */
             $attr_retur = 'data="'.$r->id_invoice.'" tanggal-invoice="'.tgl_pecah($r->tanggal).'"
@@ -205,9 +220,6 @@ class Invoice extends BaseController{
             if($r->status == "Proses")
             {
                 $sub_array[] = '<span class="badge btn-warning">Proses</span>';
-                if($r->status_bayar == "Belum Lunas"){ $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>'; } else {
-                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
-                }
                 $sub_array[] = uang($r->total - $bayar);
                 
                     $sub_array[] = '
@@ -231,7 +243,6 @@ class Invoice extends BaseController{
             {
                 $sub_array[] = '<span class="badge btn-primary">Selesai</span>';
                 if($r->status_bayar == "Belum Lunas"){ 
-                    $sub_array[] = '<span class="badge btn-warning">Belum Lunas</span>'; 
                     $sub_array[] = uang($r->total - $bayar);
                     $sub_array[] = '
                     <div class="btn-group">
@@ -255,7 +266,6 @@ class Invoice extends BaseController{
                         </ul>
                     </div>';
                 } else {
-                    $sub_array[] = '<span class="badge btn-success">Lunas</span>';
                     $sub_array[] = uang($r->total - $bayar);
                     $sub_array[] = '
                     <div class="btn-group">
@@ -340,10 +350,15 @@ class Invoice extends BaseController{
         $tanggal = tgl_pecah($this->input->post("tanggal"));
         $no_polisi = $this->input->post("no_polisi"); 
         $harga_kbk = 0;
+
+        #Kategori Katul memakai tarif kuli naik khusus Katul, selain itu tarif kuli naik biasa#
+        $kategori = $this->db->get_where('kategori', array('id' => $id_kategori))->row();
+        $is_katul = ($kategori && strtolower(trim($kategori->nama_kategori)) == 'katul');
+
         $kbk = $this->db->query("select * from sistem_setting ");
         if($kbk->num_rows() > 0){
             foreach($kbk->result() as $r){
-                $harga_kbk = $r->kuli_naik_price;
+                $harga_kbk = $is_katul ? $r->kuli_naik_for_katul_price : $r->kuli_naik_price;
             }
         }
         
@@ -747,7 +762,7 @@ class Invoice extends BaseController{
 
         #-----Kontrol Pelunasan------#
         $total_bayar = 0;
-        $t = $this->db->query("select sum(bayar) as b  from invoice_bayar where id_invoice='$id_bayar' ");
+        $t = $this->db->query("select sum(bayar) as b  from invoice_bayar where id_invoice='$id_bayar' and deleted_at is null");
         if($t->num_rows() > 0){
             foreach($t->result() as $r){
                 $total_bayar = $r->b;
@@ -775,8 +790,12 @@ class Invoice extends BaseController{
         #-----Hapus Pembayaran------#
 
         #-----Kontrol Pelunasan------#
+        $total_tagihan = 0;
+        $inv = $this->db->query("select total from invoice where id_invoice='$id_invoice' ")->row();
+        if($inv){ $total_tagihan = $inv->total; }
+
         $total_bayar = 0;
-        $t = $this->db->query("select sum(bayar) as b  from invoice_bayar where id_invoice='$id_invoice' ");
+        $t = $this->db->query("select sum(bayar) as b  from invoice_bayar where id_invoice='$id_invoice' and deleted_at is null");
         if($t->num_rows() > 0){
             foreach($t->result() as $r){
                 $total_bayar = $r->b;

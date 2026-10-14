@@ -25,6 +25,31 @@
   }
 
 $(document).ready(function(){
+
+/*--------- FIX: dropdown "Pilih" terpotong oleh area scroll DataTables (scrollX) ---------*/
+/* Menu dibuat position:fixed agar keluar dari .dataTables_scrollBody yang ber-overflow */
+$(document).on('shown.bs.dropdown', '.dataTables_scrollBody .btn-group', function(){
+    var $menu = $(this).find('.dropdown-menu');
+    var btn   = this.getBoundingClientRect();
+    var mh = $menu.outerHeight(), mw = $menu.outerWidth();
+    var top  = btn.bottom;
+    if (top + mh > window.innerHeight && btn.top - mh > 0) { top = btn.top - mh; } // buka ke atas jika mentok bawah
+    var left = btn.left;
+    if (left + mw > window.innerWidth) { left = Math.max(0, btn.right - mw); }      // geser jika mentok kanan
+    $menu.css({ position: 'fixed', top: top, left: left, right: 'auto', bottom: 'auto', zIndex: 1050 });
+});
+$(document).on('hidden.bs.dropdown', '.dataTables_scrollBody .btn-group', function(){
+    $(this).find('.dropdown-menu').removeAttr('style');
+});
+/* Tutup dropdown yang terbuka saat halaman / tabel di-scroll agar menu tidak "melayang" salah posisi */
+function tutupDropdownTabel(){
+    $('.dataTables_scrollBody .btn-group.open').removeClass('open').find('.dropdown-menu').removeAttr('style');
+}
+$(window).on('scroll resize', tutupDropdownTabel);
+document.addEventListener('scroll', function(e){
+    if ($(e.target).hasClass('dataTables_scrollBody')) { tutupDropdownTabel(); }
+}, true);
+/*------------------------------------------------------------------------------------------*/
 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
 });
@@ -40,6 +65,37 @@ $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         "order": [],
         "ajax": {
               url:"<?php echo base_url('invoice/tampil');?>",
+              type:"GET",
+        },
+        "columnDefs": [ {
+            "targets": 0,
+            "orderable":false,
+            "searchable":false
+        },
+        {
+            "targets": 8,
+            "orderable":false,
+            "searchable":false
+        },
+        {
+              "targets": 9,
+              "orderable":false,
+              "searchable":false
+        }],
+
+    });
+
+  var table_katul = $('#tabel-katul').DataTable({
+     "language": {
+            "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Indonesian.json"
+        },
+        "processing": true,
+        "serverSide": true,
+        autoWidth: false,
+        scrollX: true,
+        "order": [],
+        "ajax": {
+              url:"<?php echo base_url('invoice/tampil_katul');?>",
               type:"GET",
         },
         "columnDefs": [ {
@@ -106,6 +162,7 @@ $.ajax({
       console.log('Submit Berhasil !');
       table_ketan.ajax.reload();
       table_ir.ajax.reload();
+      table_katul.ajax.reload();
     },
     error: function (data) {
       console.log('Submit Error !');
@@ -118,7 +175,7 @@ $("#modal-buat").modal('hide');
 
 
 //GET HAPUS
-$('#tabel-ketan').on('click','.item_hapus',function(){
+$('#tabel-ketan, #tabel-katul').on('click','.item_hapus',function(){
             var id=$(this).attr('data');
             var nama=$(this).attr('nama');
             $('#ModalHapus').modal('show');
@@ -134,7 +191,7 @@ $('#tabel-ir').on('click','.item_hapus',function(){
             $('#nama').html(nama);
         });
 
-$('#tabel-ketan').on('click','.item_selesai',function(){
+$('#tabel-ketan, #tabel-katul').on('click','.item_selesai',function(){
             var id=$(this).attr('data-selesai');
             $('#ModalSelesai').modal('show');
             $('[name="id_selesai"]').val(id);
@@ -158,6 +215,8 @@ $('#tabel-ir').on('click','.item_selesai',function(){
                             $('#ModalHapus').modal('hide');
                             table_ketan.ajax.reload();
                             table_ir.ajax.reload();
+                            table_katul.ajax.reload();
+      table_katul.ajax.reload();
                             $('#btn_hapus').prop("disabled",false);
                     }
                 });
@@ -176,6 +235,8 @@ $('#tabel-ir').on('click','.item_selesai',function(){
                             $('#ModalSelesai').modal('hide');
                             table_ketan.ajax.reload();
                             table_ir.ajax.reload();
+                            table_katul.ajax.reload();
+      table_katul.ajax.reload();
                             $('#btn_selesai').prop("disabled",false);
                     }
                 });
@@ -185,7 +246,7 @@ $('#tabel-ir').on('click','.item_selesai',function(){
 
 /*------------------------------PEMBAYARAN----------------------------*/
 
-$('#tabel-ketan').on('click','.item_bayar',function(){
+$('#tabel-ketan, #tabel-katul').on('click','.item_bayar',function(){
             $("#form-bayar")[0].reset();
             var id = $(this).attr('data');
             var tgl = $(this).attr('tanggal-invoice');
@@ -274,6 +335,7 @@ $.ajax({
       console.log('Submit Berhasil !');
       table_ketan.ajax.reload();
       table_ir.ajax.reload();
+      table_katul.ajax.reload();
     },
     error: function (data) {
       console.log('Submit Error !');
@@ -283,7 +345,7 @@ $("#form-bayar")[0].reset();
 $("#modal-input-bayar").modal('hide');
 });
 
-$('#tabel-ketan').on('click','.item_riwayat',function(){
+$('#tabel-ketan, #tabel-katul').on('click','.item_riwayat',function(){
             var id = $(this).attr('data');
 
             $("#printSection-history").load('<?php echo base_url('transaksi/invoice/riwayat-pembayaran');?>/'+id);
@@ -622,18 +684,33 @@ $('#btn_hapus_retur').on('click',function(){
               ?>
               <table id="tabel-<?php echo strtolower($k->nama_kategori);  ?>" class="table table-bordered table-striped">
                 <thead>
+                <?php if (strtoupper($k->nama_kategori) == 'IR') { ?>
                 <tr>
                   <th>No</th>
                   <th>Tanggal</th>
                   <th>Pelanggan</th>
                   <th>No Truk</th>
-                  <th><?php echo (strtoupper($k->nama_kategori) == 'IR') ? 'Retur' : 'KBK Angkut'; ?></th>
+                  <th>Tonase</th>
+                  <th>Retur</th>
+                  <th>Tonase Akhir</th>
+                  <th>Status</th>
+                  <th>Piutang</th>
+                  <th>Aksi</th>
+                </tr>
+                <?php } else { ?>
+                <tr>
+                  <th>No</th>
+                  <th>Tanggal</th>
+                  <th>Pelanggan</th>
+                  <th>No Truk</th>
+                  <th>KBK Angkut</th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Pembayaran</th>
                   <th>Piutang</th>
                   <th>Aksi</th>
                 </tr>
+                <?php } ?>
                 </thead>
               </table>
               <?php
