@@ -40,7 +40,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <th>Tanggal</th>
         <th>No Truk</th>
         <th>Pengirim</th>
-        <th>Kategori</th>
         <th>Harga Satuan</th>
         <th>Tonase (Kg)</th>
         <th>Total Beli</th>
@@ -53,7 +52,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <td class="c nw"><?php echo tgl_db($p->tanggal); ?></td>
         <td class="nw"><?php echo html_escape($p->no_polisi); ?></td>
         <td><?php echo html_escape($p->nama_pengirim); ?></td>
-        <td><?php echo html_escape($p->nama_kategori); ?></td>
         <td class="r"><?php echo rp_lap($p->harga_satuan); ?></td>
         <td class="r"><?php echo rp_lap($p->total_tonase); ?></td>
         <td class="r"><?php echo rp_lap($p->harga_satuan * $p->total_tonase); ?></td>
@@ -62,16 +60,16 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
     </tbody>
     <tfoot>
       <tr>
-        <th colspan="6" style="text-align:left">TOTAL</th>
+        <th colspan="5" style="text-align:left">TOTAL</th>
         <th class="r"><?php echo rp_lap($tot_tonase); ?></th>
         <th class="r"><?php echo rp_lap($tot_beli); ?></th>
       </tr>
       <tr>
-        <th colspan="7" style="text-align:left">Sudah Bayar (DP)</th>
+        <th colspan="6" style="text-align:left">Sudah Bayar (DP)</th>
         <th class="r masuk"><?php echo rp_lap($paid); ?></th>
       </tr>
       <tr>
-        <th colspan="7" style="text-align:left">Utang</th>
+        <th colspan="6" style="text-align:left">Utang</th>
         <th class="r keluar"><?php echo rp_lap($utang); ?></th>
       </tr>
     </tfoot>
