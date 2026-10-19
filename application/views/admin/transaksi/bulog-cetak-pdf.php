@@ -61,6 +61,10 @@ foreach ($trucks as $t) { $total_berat += (int) $t->weight_by_truck; $total_timb
     table.ttd { margin-top: 26px; page-break-inside: avoid; }
     table.ttd td { text-align: center; width: 33.33%; }
     .ttd-space { height: 52px; }
+    table.judul-bagian { margin: 0 0 5px 0; border-bottom: 1.5px solid #000; }
+    table.judul-bagian td { font-size: 11.5px; font-weight: bold; padding-bottom: 2px; vertical-align: bottom; }
+    .lembar-truk { page-break-before: always; }
+    .lembar-info { font-size: 9px; color: #444; margin-top: 2px; }
     .dicetak { margin-top: 14px; font-size: 8px; color: #666; border-top: 1px solid #999; padding-top: 3px; }
 </style>
 </head>
@@ -86,6 +90,7 @@ foreach ($trucks as $t) { $total_berat += (int) $t->weight_by_truck; $total_timb
         </td>
     </tr>
 </table>
+
 
 <!-- ========== RINGKASAN ========== -->
 <table class="ringkas">
@@ -143,10 +148,34 @@ foreach ($trucks as $t) { $total_berat += (int) $t->weight_by_truck; $total_timb
     </tbody>
 </table>
 
-<!-- ========== B. RINCIAN TIMBANGAN PER TRUK ========== -->
-<h3 class="bagian">B. RINCIAN TIMBANGAN PER TRUK</h3>
+<?php endif; ?>
+
+<!-- ========== TANDA TANGAN ========== -->
+<table class="ttd">
+    <tr>
+        <?php foreach ($ttd as $label): ?><td><?= $e($label) ?>,</td><?php endforeach; ?>
+    </tr>
+    <tr>
+        <?php foreach ($ttd as $label): ?><td class="ttd-space"></td><?php endforeach; ?>
+    </tr>
+    <tr>
+        <?php foreach ($ttd as $label): ?><td>( ____________________ )</td><?php endforeach; ?>
+    </tr>
+</table>
+
+<div class="dicetak">Dicetak oleh <?= $e($petugas) ?> pada <?= $e(date('d-m-Y H:i:s')) ?></div>
+
+<?php if (!empty($trucks)): ?>
+<!-- ========== B. RINCIAN TIMBANGAN PER TRUK (1 lembar per truk) ========== -->
 <?php foreach ($trucks as $i => $t):
     $ws = $t->weights; ?>
+<div class="lembar-truk">
+<table class="judul-bagian">
+    <tr>
+        <td>B. RINCIAN TIMBANGAN PER TRUK</td>
+        <td class="text-right" style="width:30%; font-weight:normal;">Lembar truk <?= $i + 1 ?> dari <?= count($trucks) ?></td>
+    </tr>
+</table>
 <table class="truk">
     <tr>
         <td class="kepala" colspan="<?= $kolom ?>">
@@ -183,24 +212,10 @@ foreach ($trucks as $t) { $total_berat += (int) $t->weight_by_truck; $total_timb
     </tr>
     <?php endif; ?>
 </table>
+<div class="dicetak" style="margin-top:20px;">Dicetak oleh <?= $e($petugas) ?> pada <?= $e(date('d-m-Y H:i:s')) ?></div>
+</div>
 <?php endforeach; ?>
-
 <?php endif; ?>
-
-<!-- ========== TANDA TANGAN ========== -->
-<table class="ttd">
-    <tr>
-        <?php foreach ($ttd as $label): ?><td><?= $e($label) ?>,</td><?php endforeach; ?>
-    </tr>
-    <tr>
-        <?php foreach ($ttd as $label): ?><td class="ttd-space"></td><?php endforeach; ?>
-    </tr>
-    <tr>
-        <?php foreach ($ttd as $label): ?><td>( ____________________ )</td><?php endforeach; ?>
-    </tr>
-</table>
-
-<div class="dicetak">Dicetak oleh <?= $e($petugas) ?> pada <?= $e(date('d-m-Y H:i:s')) ?></div>
 
 </body>
 </html>
