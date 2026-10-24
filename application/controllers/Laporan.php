@@ -279,6 +279,10 @@ class Laporan extends BaseController{
                     $data["kategori"] = $this->db->get_where('kategori', array('id' => $id_kategori))->row()->nama_kategori;
                     
                 }
+            /* Kebutuhan Bulog (kg) dari sistem_setting, dipakai laporan kategori IR */
+            $ss = $this->db->query("select demands_of_bulog from sistem_setting order by id asc limit 1")->row();
+            $data["demands_of_bulog"] = $ss ? (float) $ss->demands_of_bulog : 0;
+
             #Menampilkan halaman#
             $this->load->view("admin/laporan/laporan-penjualan-per-nota-tampil.php",$data);
             #Menampilkan halaman#
