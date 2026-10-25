@@ -1,11 +1,16 @@
 <?php
 /**
  * Laporan Penjualan - Tampil per Nota
- * Variabel: $gaji (query invoice + pelanggan), $jenis, $lap, $kategori, $pelanggan, $demands_of_bulog
- * Kategori IR: tambah kolom Retur & Tonase Akhir setelah Tonase, plus keterangan pemenuhan kebutuhan Bulog.
+ * Variabel: $gaji (query invoice + pelanggan), $jenis, $lap, $kategori, $pelanggan, $demands_of_bulog, $list_bulog
+ * Kategori IR: tambah kolom Retur & Tonase Akhir setelah Tonase, plus keterangan pemenuhan kebutuhan Bulog:
+ *   Total kebutuhan = demands_of_bulog (mis. 20.900) x jumlah permintaan di tabel bulogs pada periode laporan
+ *   Selisih         = total kebutuhan - total tonase bersih (tonase akhir)  -> kurang / sisa tonase
  */
 $is_ir = (isset($kategori) && strtoupper(trim($kategori)) === 'IR');
-$kebutuhan_bulog = isset($demands_of_bulog) ? (float) $demands_of_bulog : 0;
+$kebutuhan_bulog = isset($demands_of_bulog) ? (float) $demands_of_bulog : 0;   // kebutuhan per permintaan
+$list_bulog      = isset($list_bulog) ? $list_bulog : array();
+$jml_permintaan  = count($list_bulog);
+$total_kebutuhan = $kebutuhan_bulog * $jml_permintaan;
 
 $rows = array();
 $tot = array('tonase' => 0, 'retur' => 0, 'tonase_akhir' => 0, 'total' => 0, 'bayar' => 0, 'piutang' => 0, 'lunas' => 0);
@@ -58,6 +63,7 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
 
 <style>
   .ket-bulog { margin-top: 10px; padding: 8px 12px; border: 1px solid #ccc; border-left: 4px solid #f39c12; border-radius: 4px; font-size: 17px; }
+  table.data.bulog { width: auto; min-width: 320px; }
 </style>
 
 <?php if (count($rows) == 0) { ?>
@@ -124,26 +130,51 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
   </table>
   </div>
 
-  <?php if ($is_ir) {
-      /* Pemenuhan kebutuhan Bulog: (kebutuhan / total tonase akhir) jumlah transaksi + selisihnya */
-      $selisih = $kebutuhan_bulog - $tot['tonase_akhir'];
-      if ($kebutuhan_bulog <= 0) {
-          $ket = '<span class="redup">Kebutuhan Bulog belum diatur di Setting Sistem.</span>';
-      } else if ($selisih > 0) {
-          $ket = '<span class="keluar">(kurang ' . rp_lap($selisih) . ' Kg)</span>';
-      } else if ($selisih < 0) {
-          $ket = '<span class="masuk">(lebih ' . rp_lap(abs($selisih)) . ' Kg)</span>';
-      } else {
-          $ket = '<span class="masuk">(terpenuhi)</span>';
-      }
-  ?>
+<?php } ?>
+
+<?php if ($is_ir) {
+    /* Pemenuhan kebutuhan Bulog: (kebutuhan x jumlah permintaan) - total tonase bersih */
+    $selisih = $total_kebutuhan - $tot['tonase_akhir'];
+    if ($kebutuhan_bulog <= 0) {
+        $ket = '<span class="redup">Kebutuhan Bulog belum diatur di Setting Sistem.</span>';
+    } else if ($jml_permintaan == 0) {
+        $ket = '<span class="redup">(tidak ada permintaan Bulog pada periode ini)</span>';
+    } else if ($selisih > 0) {
+        $ket = '<span class="keluar">(kurang ' . rp_lap($selisih) . ' Kg)</span>';
+    } else if ($selisih < 0) {
+        $ket = '<span class="masuk">(sisa ' . rp_lap(abs($selisih)) . ' Kg)</span>';
+    } else {
+        $ket = '<span class="masuk">(terpenuhi)</span>';
+    }
+?>
   <div class="ket-bulog">
     <strong>Permintaan Bulog :</strong>
-    (<?php echo rp_lap($kebutuhan_bulog); ?> / <?php echo rp_lap($tot['tonase_akhir']); ?>)
+    (<?php echo rp_lap($kebutuhan_bulog); ?> x <?php echo $jml_permintaan; ?> = <?php echo rp_lap($total_kebutuhan); ?>
+    / <?php echo rp_lap($tot['tonase_akhir']); ?>)
     <?php echo count($rows); ?> Transaksi <?php echo $ket; ?>
   </div>
-  <?php } ?>
 
+  <h3 class="sub-judul">Daftar PO Bulog</h3>
+  <?php if ($jml_permintaan == 0) { ?>
+    <div class="redup">Tidak ada permintaan Bulog pada periode ini.</div>
+  <?php } else { ?>
+  <table class="data bulog">
+    <thead>
+      <tr>
+        <th style="width:35px">No</th>
+        <th>Tanggal</th>
+      </tr>
+    </thead>
+    <tbody>
+    <?php $nb = 0; foreach ($list_bulog as $b) { $nb++; ?>
+      <tr>
+        <td class="c"><?php echo $nb; ?></td>
+        <td class="c nw"><?php echo tgl_db($b->date); ?></td>
+      </tr>
+    <?php } ?>
+    </tbody>
+  </table>
+  <?php } ?>
 <?php } ?>
 
 <?php $this->load->view('admin/laporan/_laporan-foot.php'); ?>

@@ -283,6 +283,11 @@ class Laporan extends BaseController{
             $ss = $this->db->query("select demands_of_bulog from sistem_setting order by id asc limit 1")->row();
             $data["demands_of_bulog"] = $ss ? (float) $ss->demands_of_bulog : 0;
 
+            /* Daftar permintaan Bulog (tabel bulogs) sesuai rentang tanggal laporan, urut tanggal */
+            $data["list_bulog"] = $this->db->query("select id, date from bulogs
+                where deleted_at is null and date between ? and ?
+                order by date asc, created_at asc", array(tgl_pecah($dari), tgl_pecah($sampai)))->result();
+
             #Menampilkan halaman#
             $this->load->view("admin/laporan/laporan-penjualan-per-nota-tampil.php",$data);
             #Menampilkan halaman#
