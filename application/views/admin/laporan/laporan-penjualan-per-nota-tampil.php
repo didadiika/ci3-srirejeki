@@ -86,9 +86,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <th>Retur (Kg)</th>
         <th>Tonase Akhir (Kg)</th>
         <?php } ?>
-        <th>Total Invoice</th>
-        <th>Sudah Bayar</th>
-        <th>Piutang</th>
         <th>Status</th>
       </tr>
     </thead>
@@ -106,9 +103,6 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <td class="r"><?php echo $p->retur > 0 ? '<span class="keluar">' . rp_lap($p->retur) . '</span>' : '0'; ?></td>
         <td class="r"><strong><?php echo rp_lap($p->tonase_akhir); ?></strong></td>
         <?php } ?>
-        <td class="r"><?php echo rp_lap($p->total); ?></td>
-        <td class="r"><?php echo rp_lap($p->sudah_bayar); ?></td>
-        <td class="r"><?php echo rp_lap($p->piutang); ?></td>
         <td class="c"><?php echo $badge; ?></td>
       </tr>
     <?php } ?>
@@ -121,10 +115,7 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <th class="r"><?php echo rp_lap($tot['retur']); ?></th>
         <th class="r"><?php echo rp_lap($tot['tonase_akhir']); ?></th>
         <?php } ?>
-        <th class="r"><?php echo rp_lap($tot['total']); ?></th>
-        <th class="r"><?php echo rp_lap($tot['bayar']); ?></th>
-        <th class="r"><?php echo rp_lap($tot['piutang']); ?></th>
-        <th></th>
+        <th><?php echo rp_lap($tot['tonase_akhir']). "/" . rp_lap($kebutuhan_bulog). " ="; ?> <?php echo rp_lap($tot['tonase_akhir'] / $kebutuhan_bulog); ?> PO</th>
       </tr>
     </tfoot>
   </table>
