@@ -150,29 +150,64 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
   <div class="ket-bulog">
     <strong>Permintaan Bulog :</strong>
     (<?php echo rp_lap($kebutuhan_bulog); ?> x <?php echo $jml_permintaan; ?> = <?php echo rp_lap($total_kebutuhan); ?>
-    / <?php echo rp_lap($tot['tonase_akhir']); ?>)
+    - <?php echo rp_lap($tot['tonase_akhir']); ?>)
     <?php echo count($rows); ?> Transaksi <?php echo $ket; ?>
   </div>
 
   <h3 class="sub-judul">Daftar PO Bulog</h3>
   <?php if ($jml_permintaan == 0) { ?>
     <div class="redup">Tidak ada permintaan Bulog pada periode ini.</div>
-  <?php } else { ?>
+  <?php } else {
+    /* Alokasi tonase bersih ke tiap PO secara berurutan (urut tanggal):
+     * tiap PO dipenuhi penuh sebesar permintaan, sisa kekurangan jatuh di PO terakhir.
+     * Contoh: tonase 62.000, 3 PO x 20.900 -> PO1 = 0, PO2 = 0, PO3 kurang 700. */
+    $sisa_tonase = (float) $tot['tonase_akhir'];
+    $tot_kurang  = 0;
+    $tot_kirim   = 0;
+  ?>
   <table class="data bulog">
     <thead>
       <tr>
-        <th style="width:35px">No</th>
         <th>Tanggal</th>
+        <th>Permintaan (Kg)</th>
+        <th>Terkirim (Kg)</th>
+        <th>Kekurangan (Kg)</th>
       </tr>
     </thead>
     <tbody>
-    <?php $nb = 0; foreach ($list_bulog as $b) { $nb++; ?>
+    <?php $nb = 0; foreach ($list_bulog as $b) { $nb++;
+        $terpenuhi   = min($kebutuhan_bulog, max(0, $sisa_tonase));
+        $sisa_tonase -= $terpenuhi;
+        $kurang      = $kebutuhan_bulog - $terpenuhi;
+        $tot_kurang += $kurang;
+        $lebih       = ($nb == $jml_permintaan && $sisa_tonase > 0) ? $sisa_tonase : 0; // kelebihan kirim di PO terakhir
+        $terkirim    = $terpenuhi + $lebih;   // tonase yang dialokasikan ke PO ini
+        $tot_kirim  += $terkirim;
+    ?>
       <tr>
-        <td class="c"><?php echo $nb; ?></td>
         <td class="c nw"><?php echo tgl_db($b->date); ?></td>
+        <td class="r"><?php echo rp_lap($kebutuhan_bulog); ?></td>
+        <td class="r"><?php echo rp_lap($terkirim); ?></td>
+        <td class="r">
+          <?php if ($kurang > 0) { ?>
+            <span class="keluar"><?php echo rp_lap($kurang); ?></span>
+          <?php } else if ($lebih > 0) { ?>
+            <span class="masuk">0 (lebih <?php echo rp_lap($lebih); ?>)</span>
+          <?php } else { ?>
+            0
+          <?php } ?>
+        </td>
       </tr>
     <?php } ?>
     </tbody>
+    <tfoot>
+      <tr>
+        <th style="text-align:left">TOTAL</th>
+        <th class="r"><?php echo rp_lap($total_kebutuhan); ?></th>
+        <th class="r"><?php echo rp_lap($tot_kirim); ?></th>
+        <th class="r"><?php echo rp_lap($tot_kurang); ?></th>
+      </tr>
+    </tfoot>
   </table>
   <?php } ?>
 <?php } ?>
