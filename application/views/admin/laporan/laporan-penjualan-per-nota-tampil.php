@@ -70,6 +70,49 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
 
   <div class="kosong"><h3>Transaksi tidak ditemukan.</h3></div>
 
+<?php } else if (!$is_ir) {
+  /* Kategori selain IR (Ketan, Katul, Semua Kategori): tampilan lama
+     No | Tanggal | Pelanggan | Tonase | Total Invoice | Sudah Bayar | Piutang + baris Total */ ?>
+
+  <h3 class="sub-judul">Rincian per Invoice</h3>
+  <div class="scroll-x">
+  <table class="data">
+    <thead>
+      <tr>
+        <th style="width:35px">No</th>
+        <th>Tanggal</th>
+        <th>Pelanggan</th>
+        <th>Tonase</th>
+        <th>Total Invoice</th>
+        <th>Sudah Bayar</th>
+        <th>Piutang</th>
+      </tr>
+    </thead>
+    <tbody>
+    <?php $no = 0; foreach ($rows as $p) { $no++; ?>
+      <tr>
+        <td class="c"><?php echo $no; ?></td>
+        <td class="c nw"><?php echo tgl_db($p->tanggal); ?></td>
+        <td><?php echo html_escape($p->nama_pelanggan); ?></td>
+        <td class="r"><?php echo rp_lap($p->total_tonase); ?></td>
+        <td class="r"><?php echo rp_lap($p->total); ?></td>
+        <td class="r"><?php echo rp_lap($p->sudah_bayar); ?></td>
+        <td class="r"><?php echo $p->piutang > 0 ? '<span class="keluar">' . rp_lap($p->piutang) . '</span>' : rp_lap($p->piutang); ?></td>
+      </tr>
+    <?php } ?>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="3" style="text-align:left">Total</th>
+        <th class="r"><?php echo rp_lap($tot['tonase']); ?></th>
+        <th class="r"><?php echo rp_lap($tot['total']); ?></th>
+        <th class="r"><?php echo rp_lap($tot['bayar']); ?></th>
+        <th class="r"><?php echo rp_lap($tot['piutang']); ?></th>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+
 <?php } else { ?>
 
   <h3 class="sub-judul">Rincian per Invoice</h3>
@@ -115,7 +158,7 @@ $this->load->view('admin/laporan/_laporan-head.php', array(
         <th class="r"><?php echo rp_lap($tot['retur']); ?></th>
         <th class="r"><?php echo rp_lap($tot['tonase_akhir']); ?></th>
         <?php } ?>
-        <th><?php echo rp_lap($tot['tonase_akhir']). "/" . rp_lap($kebutuhan_bulog). " ="; ?> <?php echo rp_lap($tot['tonase_akhir'] / $kebutuhan_bulog); ?> PO</th>
+        <th><?php if ($kebutuhan_bulog > 0) { echo rp_lap($tot['tonase_akhir']) . "/" . rp_lap($kebutuhan_bulog) . " = " . rp_lap($tot['tonase_akhir'] / $kebutuhan_bulog) . " PO"; } else { echo "-"; } ?></th>
       </tr>
     </tfoot>
   </table>
