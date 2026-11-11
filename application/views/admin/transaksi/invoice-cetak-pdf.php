@@ -18,6 +18,18 @@ $fmtQty = function ($q) {
     return (floor($q) == $q) ? number_format($q, 0, ',', '.') : rtrim(rtrim(number_format($q, 2, ',', '.'), '0'), ',');
 };
 $lunas = ($sisa <= 0);
+
+// Logo bank di-embed sebagai base64 agar tampil di Dompdf (isRemoteEnabled = false)
+// maupun di mode ?html=1. Hanya file gambar di dalam FCPATH yang dibaca.
+$logoSrc = function ($path) {
+    if (empty($path)) return null;
+    $file = realpath(FCPATH . ltrim($path, '/\\'));
+    $root = realpath(FCPATH);
+    if (!$file || !$root || strpos($file, $root) !== 0 || !is_file($file)) return null;
+    $info = @getimagesize($file);
+    if (!$info || empty($info['mime'])) return null;
+    return 'data:' . $info['mime'] . ';base64,' . base64_encode(file_get_contents($file));
+};
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -51,6 +63,12 @@ $lunas = ($sisa <= 0);
 
     table.items tr.sum td { border: 1px solid #000; padding: 3px 4px; }
     .rek-bank { font-weight: bold; }
+    .rek-label { font-size: 9px; color: #444; margin-bottom: 3px; }
+    table.items table.rek { width: 100%; margin-bottom: 3px; }
+    table.items table.rek td { border: 0; padding: 0; vertical-align: middle; }
+    table.items table.rek td.rek-logo { width: 80px; padding-right: 8px; }
+    .rek-logo img { height: 24px; }
+    .rek-norek { font-weight: bold; font-size: 12px; letter-spacing: 0.5px; }
     .terbilang { font-style: italic; font-size: 10px; }
 
     table.ttd td { text-align: center; padding-top: 6px; }
@@ -131,10 +149,22 @@ $lunas = ($sisa <= 0);
     <!-- ===== REKENING + TOTAL (satu tabel dgn barang agar kolom sejajar) ===== -->
         <tr class="sum">
             <td colspan="3" rowspan="3">
-                <?php foreach ($rekening as $r): ?>
-                    <div class="rek-bank"><?= $e($r->nama_bank) ?></div>
-                    <div class="bold"><?= $e($r->no_rek) ?></div>
-                    <div class="bold"><?= $e($r->nama_rek) ?></div>
+                <?php if (!empty($rekening)): ?>
+                    <div class="rek-label">Pembayaran transfer ke:</div>
+                <?php endif; ?>
+                <?php foreach ($rekening as $r): $logo = $logoSrc(isset($r->logo) ? $r->logo : null); ?>
+                    <table class="rek">
+                        <tr>
+                            <?php if ($logo): ?>
+                            <td class="rek-logo"><img src="<?= $logo ?>" alt="<?= $e($r->nama_bank) ?>"></td>
+                            <?php endif; ?>
+                            <td>
+                                <div class="rek-bank"><?= $e($r->nama_bank) ?></div>
+                                <div class="rek-norek"><?= $e($r->no_rek) ?></div>
+                                <div class="bold">a.n. <?= $e($r->nama_rek) ?></div>
+                            </td>
+                        </tr>
+                    </table>
                 <?php endforeach; ?>
             </td>
             <td>Total</td>
