@@ -514,7 +514,26 @@ class Invoice extends BaseController{
         $canvas->page_text($canvas->get_width() - 110, $canvas->get_height() - 26,
             'Halaman {PAGE_NUM} dari {PAGE_COUNT}', $font, 7, array(0.3, 0.3, 0.3));
 
-        $dompdf->stream($nama_file, array('Attachment' => (bool) $this->input->get('download')));
+        // Kirim PDF dengan header anti-cache, supaya browser, nginx/aaPanel, maupun
+        // proxy (Cloudflare dll.) tidak menyimpan PDF lama. Setiap cetak selalu
+        // dibuat ulang dari database -> rekening yang tampil selalu yang terbaru.
+        $pdf        = $dompdf->output();
+        $disposisi  = $this->input->get('download') ? 'attachment' : 'inline';
+        $nama_aman  = str_replace(array('"', "\r", "\n"), '', $nama_file);
+
+        if (ob_get_length()) { ob_end_clean(); }
+        foreach (array('Cache-Control', 'Pragma', 'Expires', 'Last-Modified', 'ETag') as $h) {
+            header_remove($h);
+        }
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: ' . $disposisi . '; filename="' . $nama_aman . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('X-Accel-Expires: 0');      // nginx fastcgi/proxy cache (aaPanel) tidak menyimpan
+        header('Surrogate-Control: no-store');
+        echo $pdf;
         exit;
     }
 
